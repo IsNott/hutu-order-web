@@ -19,7 +19,7 @@
 	@import '@/static/customicons.css';
 	// 设置整个项目的背景色
 	page {
-		background-color: #f9f9f9;
+		background-color: #e0e0e0;
 	}
 
 	/* #endif */

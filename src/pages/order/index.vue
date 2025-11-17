@@ -68,7 +68,9 @@
 				key: new Date().getTime().toString()
 			}
 		},
-		onLoad() {},
+		onLoad(opt) {
+      
+    },
 		onShow() {
 			const vm = this;
 			vm.showLoading = true;
