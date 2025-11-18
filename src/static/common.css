@@ -1,0 +1,234 @@
+/* ===== 通用样式类 ===== */
+
+/* 背景色类 */
+.bg-primary-dark { background-color: var(--primary-dark); }
+.bg-secondary-dark { background-color: var(--secondary-dark); }
+.bg-background-light { background-color: var(--background-light); }
+.bg-accent-primary { background-color: var(--accent-primary); }
+.bg-accent-secondary { background-color: var(--accent-secondary); }
+
+/* 文字颜色类 */
+.text-primary-dark { color: var(--primary-dark); }
+.text-secondary-dark { color: var(--secondary-dark); }
+.text-background-light { color: var(--background-light); }
+.text-accent-primary { color: var(--accent-primary); }
+.text-accent-secondary { color: var(--accent-secondary); }
+
+/* 边框颜色类 */
+.border-primary-dark { border-color: var(--primary-dark); }
+.border-secondary-dark { border-color: var(--secondary-dark); }
+.border-background-light { border-color: var(--background-light); }
+.border-accent-primary { border-color: var(--accent-primary); }
+.border-accent-secondary { border-color: var(--accent-secondary); }
+
+/* 按钮样式 */
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: var(--primary-dark);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background-color: var(--accent-secondary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* 标签样式 */
+.tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.tag-hot {
+  background-color: var(--accent-secondary);
+  color: white;
+}
+
+.tag-organic {
+  background-color: var(--accent-secondary);
+  color: white;
+}
+
+.tag-special {
+  background-color: var(--accent-primary);
+  color: var(--primary-dark);
+}
+
+/* 卡片样式 */
+.card {
+  background-color: var(--secondary-dark);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.card-light {
+  background-color: var(--background-light);
+  color: var(--primary-dark);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 导航栏样式 */
+.navbar {
+  background-color: var(--primary-dark);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--secondary-dark);
+}
+
+/* 输入框样式 */
+.input-field {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--secondary-dark);
+  border-radius: 6px;
+  padding: 10px 15px;
+  color: var(--background-light);
+  width: 100%;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+/* 分隔线样式 */
+.divider {
+  height: 1px;
+  background-color: var(--secondary-dark);
+  margin: 20px 0;
+}
+
+/* 响应式文字颜色调整 */
+@media (max-width: 768px) {
+  .text-background-light {
+    color: var(--background-light);
+  }
+}
+
+/* 动画效果 */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 咖啡点单小程序专用组件样式 */
+
+/* 咖啡项目卡片 */
+.coffee-item {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.coffee-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.coffee-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  background-color: var(--secondary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-size: 2rem;
+}
+
+.coffee-details {
+  flex: 1;
+}
+
+.coffee-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+}
+
+.coffee-description {
+  color: var(--background-light);
+  opacity: 0.7;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.coffee-price {
+  font-weight: bold;
+  color: var(--accent-primary);
+  font-size: 1.1rem;
+}
+
+/* 购物车样式 */
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--secondary-dark);
+}
+
+.cart-total {
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: right;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 2px solid var(--accent-primary);
+}
+
+/* 分类标签 */
+.category-tab {
+  padding: 8px 16px;
+  background-color: var(--secondary-dark);
+  border-radius: 20px;
+  margin-right: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.category-tab.active {
+  background-color: var(--accent-primary);
+  color: var(--primary-dark);
+}
+
+.category-tab:hover {
+  background-color: var(--accent-secondary);
+  color: white;
+}

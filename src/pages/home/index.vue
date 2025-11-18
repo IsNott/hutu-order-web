@@ -1,16 +1,16 @@
 <template>
-  <view class="header">
-    <uni-swiper-dot class="uni-swiper-dot-box" :info="playImages" :current="current"
-      mode="round" field="content" :dots-styles="dotStyle">
+  <scroll-view class="body">
+    <uni-swiper-dot class="uni-swiper-dot-box" :info="playImages" :current="current" mode="round" field="content"
+      :dots-styles="dotStyle">
       <swiper class="swiper-box" @change="changeBanner" :current="current" :autoplay='true'>
         <swiper-item v-for="(item, index) in playImages" :key="index" @click="clickImage(item)">
-          <image style="width: 100%;" :src="config.baseUrl + item.url"/>
+          <image style="width: 100%;" :src="config.baseUrl + item.url" />
         </swiper-item>
       </swiper>
     </uni-swiper-dot>
-    <view class="top-info">
+    <view class="top-info box">
       <view class="title" @click="handleClickShopInfo">
-        <view>{{currentShop.name}}</view>
+        <view>{{ currentShop.name }}</view>
         <uni-icons type="right" size="16"></uni-icons>
       </view>
       <view class="offer">
@@ -18,33 +18,39 @@
           <view class="offer-item-desc">立即下单</view>
           <view class="offer-item-title">Order Now</view>
         </view>
+        <!-- 分割线 -->
+        <view class="divider"></view>
         <view class="offer-item" @click="clickOfferItem('2')">
           <view class="offer-item-desc">预约点单</view>
           <view class="offer-item-title">Schedule</view>
         </view>
       </view>
     </view>
-    <view class="activity-card">
-      <uni-swiper-dot class="uni-swiper-dot-box" :info="playActImages" :current="actCurrent"
-      mode="round" field="content" :dots-styles="actDotStyle">
-      <swiper class="swiper-box" @change="changeActBanner" :current="actCurrent" :autoplay='true'>
-        <swiper-item v-for="(item, index) in playActImages" :key="index" @click="clickImage(item)">
-          <image style="width: 100%;" :src="config.baseUrl + item.url" />
-        </swiper-item>
-      </swiper>
-    </uni-swiper-dot>
+    <!-- 轮播活动卡 -->
+    <view class="activity-card box">
+      <uni-swiper-dot :info="playActImages" :current="actCurrent" mode="round" field="content"
+        :dots-styles="actDotStyle">
+        <swiper class="swiper" @change="changeActBanner" :current="actCurrent" :autoplay='true' next-margin="20rpx">
+          <swiper-item class="swiper-item" v-for="(item, index) in playActImages" :key="index"
+            @click="clickImage(item)">
+            <image class="swiper-image" :src="config.baseUrl + item.url" mode="widthFix" />
+          </swiper-item>
+        </swiper>
+      </uni-swiper-dot>
     </view>
 
-    <view style="margin-top: 20px;" v-if="activity.length > 0">
-      <view class="activity-info" :key="index" v-for="act,index in activity">
-        <image style="width: 100%;" :src="config.baseUrl + act.url" :style="act.style"/>
+    <!-- 活动列表 -->
+    <view class="activity-list" v-if="activity.length > 0">
+      <view class="activity-info box" :key="index" v-for="act, index in activity">
+        <!-- <image class="activity-img" :src="config.baseUrl + act.url" :style="act.style" mode="aspectFit" /> -->
+        <image class="activity-img" :src="config.baseUrl + act.url" mode="widthFix"/>
       </view>
     </view>
 
-    <view style="padding:6px;margin: 0px 0px;text-align: center;font-size: 12px;color: gray;">
+    <view class="footer">
       —— Hutu-order ——
     </view>
-  </view>
+  </scroll-view>
 </template>
 
 <script setup>
@@ -54,6 +60,10 @@ const playImages = ref([])
 const playActImages = ref([])
 const current = ref(0)
 const actCurrent = ref(0)
+const imageHeights = reactive({
+  swiper: [],
+  activity: []
+})
 const currentShop = ref({
   name: '糊涂店（春熙路101号2铺面）',
   desc: 'hutu-order',
@@ -77,11 +87,11 @@ const vipCard = ref({})
 // fake data
 const img = [{
   url: '/static/1905083114506674177.png',
-  navigation: '',
+  navigation: ''
 },
 {
   url: '/static/1941046464679747586.png',
-  navigation: '',
+  navigation: ''
 }
 ]
 
@@ -94,6 +104,11 @@ const playActivity = [{
   url: '/static/20251117170524.png',
   navigation: '',
   name: '优惠券'
+},
+{
+  url: '/static/20251118105516.png',
+  navigation:'',
+  name: '活动'
 }
 ]
 
@@ -157,10 +172,23 @@ const changeActBanner = (e) => {
 }
 
 const clickImage = (img) => {
-  if(img.navigation){
+  if (img.navigation) {
     uni.navigateTo({
       url: img.navigation
     })
+  }
+}
+
+const onImageLoad = (type, e, index) => {
+  const { width, height } = e.detail
+  // 根据图片实际宽高比计算显示高度
+  const viewWidth = 750 // rpx，屏幕宽度
+  const displayHeight = (height / width) * viewWidth
+
+  if (type === 'swiper') {
+    imageHeights.swiper[index] = displayHeight
+  } else if (type === 'activity') {
+    imageHeights.activity[index] = displayHeight
   }
 }
 // Watchers
@@ -168,68 +196,106 @@ const clickImage = (img) => {
 </script>
 
 <style scoped lang="scss">
-.top-info{
-  padding: 6px;
-    background-color: white;
-    border-radius: 10px;
-    margin: 0px 20px;
-    z-index: 1;
-    /* margin-bottom: 200px; */
-    position: relative;
-    top: -26px;
+.body{
+  // overflow-y: auto;
+  // height: 100%;
 }
-.title{
-  font-size: 12px;
+
+.box {
+  margin: 20rpx 30rpx;
+  border-radius: 10rpx;
+}
+
+.top-info {
+  padding: 6rpx;
+  background-color: white;
+  border-radius: 10rpx;
+  z-index: 1;
+  position: relative;
+  top: -40rpx;
+  margin-top: 0rpx;
+}
+
+.divider {
+ border: 1px solid var(--sencondColor);
+ height: 80rpx;
+}
+
+.title {
+  font-size: 20rpx;
   text-align: right;
-  margin: 4px 0px;
+  margin: 10rpx 0rpx;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
 }
 
 .activity-card {
-  margin: 0px 16px;
-  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  // width: 100%;
+  height: 25%;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
-.activity-info{
-  margin: 10px 16px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.swiper {
+  height: 200rpx;
 }
 
-.offer{
+.swiper-item {
+  display: block;
+  height: 200rpx;
+  line-height: 200rpx;
+  text-align: center;
+}
+
+.activity-info {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.offer {
   display: flex;
   justify-content: space-evenly;
-  .offer-item{
-    margin: 10px;
-    background-color: #ffffff;
-    padding: 20px 40px;
-    border-radius: 4px;
-    font-size: 16px;
+  align-items: center;
+  .offer-item {
+    margin: 10rpx;
+    // background-color: #3C2A21 ;
+    padding: 20rpx 40rpx;
+    // border-radius: 4rpx;
+    font-size: 30rpx;
     text-align: center;
-    // border: 1px solid #bdc3c7;
-  }
-  .offer-item-title{
-    margin-bottom: 6px;
   }
 
-  .offer-item-desc{
+  .offer-item-title {
+    margin-bottom: 6rpx;
+  }
+
+  .offer-item-desc {
     font-weight: bold;
-    font-size: 20px;
-    margin-bottom: 4px;
+    font-size: 38rpx;
+    margin-bottom: 4rpx;
   }
 }
 
-:deep(.uni-swiper__dots-box){
-    margin-left: 10px !important;
-    justify-content: flex-start !important;
+:deep(.uni-swiper__dots-box) {
+  margin-left: 10rpx !important;
+  justify-content: flex-start !important;
 }
 
-.vip-card-box{
+.vip-card-box {
   display: flex;
 }
 
+.activity-img {
+  width: 100%;
+  border-radius: 10px;
+  // max-height: 200rpx;
+}
+
+.footer {
+  padding: 6rpx;
+  margin: 0rpx 0rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: gray;
+}
 </style>
