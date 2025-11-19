@@ -42,7 +42,6 @@
     <!-- 活动列表 -->
     <view class="activity-list" v-if="activity.length > 0">
       <view class="activity-info box" :key="index" v-for="act, index in activity">
-        <!-- <image class="activity-img" :src="config.baseUrl + act.url" :style="act.style" mode="aspectFit" /> -->
         <image class="activity-img" :src="config.baseUrl + act.url" mode="widthFix"/>
       </view>
     </view>
@@ -56,6 +55,7 @@
 <script setup>
 import { ref, reactive, onMounted, defineProps, defineEmits, watch } from 'vue'
 import { config } from '@/config/index'
+import { HomeAPI } from '@/pages/home/api'
 const playImages = ref([])
 const playActImages = ref([])
 const current = ref(0)
@@ -84,33 +84,6 @@ const actDotStyle = {
 }
 const activity = ref([])
 const vipCard = ref({})
-// fake data
-const img = [{
-  url: '/static/1905083114506674177.png',
-  navigation: ''
-},
-{
-  url: '/static/1941046464679747586.png',
-  navigation: ''
-}
-]
-
-const playActivity = [{
-  url: '/static/20251117170448.png',
-  navigation: '',
-  name: '优惠券'
-},
-{
-  url: '/static/20251117170524.png',
-  navigation: '',
-  name: '优惠券'
-},
-{
-  url: '/static/20251118105516.png',
-  navigation:'',
-  name: '活动'
-}
-]
 
 const card = {
   points: 10,
@@ -134,7 +107,7 @@ const data = reactive({})
 onMounted(() => {
   getImage()
   getAct()
-  getUserInfo()
+  // getUserInfo()
 })
 
 // Methods
@@ -145,16 +118,21 @@ const clickOfferItem = (type) => {
 }
 
 const getImage = () => {
-  playImages.value = img
+  HomeAPI.getPlayImage(0).then(res => {
+    playImages.value = res.data
+  })
 }
 
 const getAct = () => {
-  playActImages.value = playActivity
-  activity.value = playActivity
+  HomeAPI.getPlayImage(1).then(res => {
+    playActImages.value = res.data
+  })
+  HomeAPI.getPlayImage(2).then(res => {
+    activity.value = res.data
+  })  
 }
 
 const getUserInfo = () => {
-  vipCard.value = card
 }
 
 const handleClickShopInfo = () => {

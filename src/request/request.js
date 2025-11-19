@@ -13,10 +13,10 @@ export const request = (api, method, data) => {
 	})
 }
 
-export const httpGet = (api, data) => {
+export const httpGet = (api) => {
 	// preHandle();
 	return new Promise((resolve, rejects) => {
-		handleRequest(api, 'GET', data, resolve, rejects)
+		handleRequest(api, 'GET', null, resolve, rejects)
 	})
 }
 
@@ -27,14 +27,14 @@ export const httpPost = (api, data) => {
 	})
 }
 
-export const get = (api, data, header) => {
+export const get = (api, header = {}) => {
 	// preHandle();
 	return new Promise((resolve, rejects) => {
-		handleRequest(api, 'GET', data, resolve, rejects,header)
+		handleRequest(api, 'GET', null, resolve, rejects,header)
 	})
 }
 
-export const post = (api, data, header) => {
+export const post = (api, data, header = {}) => {
 	// preHandle();
 	return new Promise((resolve, rejects) => {
 		handleRequest(api, 'POST', data, resolve, rejects, header)
@@ -45,66 +45,6 @@ export const upload = (api, filePath, otherFormData) => {
 	return new Promise((resolve, rejects) => {
 		handleUpload(api, filePath,otherFormData, resolve, rejects)
 	})
-}
-
-function preHandle() {
-	const token = uni.getStorageSync("token");
-	if (!token) {
-		// #ifdef MP-WEIXIN
-		wx.getSetting({
-			success(res) {
-				console.log('Wechat setting', res)
-				if (!res.authSetting['scope.userInfo']) {
-					['scope.userInfo'].forEach(r => {
-						wx.authorize({
-							scope: r,
-							success() {
-								console.error('用户授权', r)
-							},
-							fail() {
-								console.error('用户取消授权', r)
-							}
-						})
-					})
-				}
-			}
-		})
-		wx.login({
-			success(res) {
-				if (res.code) {
-					const code = res.code
-					miniProgramLogin(code).then(res => {
-						if (res.data.alreadyRegister) {
-							storeTokenInfo(res.data);
-						} else {
-							var userInfo;
-							wx.getUserInfo({
-								// 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
-								desc: '用于完善用户资料',
-								success: (res) => {
-									userInfo = res.userInfo;
-									register({
-										code: code,
-										...userInfo
-									}).then(res => {
-										storeTokenInfo(res.data);
-									})
-								}
-							})
-						}
-					})
-				} else {
-					console.error('微信小程序登录失败！' + res.errMsg)
-				}
-			}
-		})
-		// #endif
-	}
-}
-
-function storeTokenInfo(info) {
-	uni.setStorageSync('user_info', info)
-	uni.setStorageSync('token', info.token)
 }
 
 function handleRequest(api, method, data, resolve, reject, custHeader) {
@@ -268,4 +208,64 @@ function handleUpload(api, filePath,otherFormData, resolve, reject){
 			// uni.hideLoading()
 		}
 	});
+}
+
+function preHandle() {
+	const token = uni.getStorageSync("token");
+	if (!token) {
+		// #ifdef MP-WEIXIN
+		wx.getSetting({
+			success(res) {
+				console.log('Wechat setting', res)
+				if (!res.authSetting['scope.userInfo']) {
+					['scope.userInfo'].forEach(r => {
+						wx.authorize({
+							scope: r,
+							success() {
+								console.error('用户授权', r)
+							},
+							fail() {
+								console.error('用户取消授权', r)
+							}
+						})
+					})
+				}
+			}
+		})
+		wx.login({
+			success(res) {
+				if (res.code) {
+					const code = res.code
+					miniProgramLogin(code).then(res => {
+						if (res.data.alreadyRegister) {
+							storeTokenInfo(res.data);
+						} else {
+							var userInfo;
+							wx.getUserInfo({
+								// 声明获取用户个人信息后的用途，后续会展示在弹窗中，请谨慎填写
+								desc: '用于完善用户资料',
+								success: (res) => {
+									userInfo = res.userInfo;
+									register({
+										code: code,
+										...userInfo
+									}).then(res => {
+										storeTokenInfo(res.data);
+									})
+								}
+							})
+						}
+					})
+				} else {
+					console.error('微信小程序登录失败！' + res.errMsg)
+				}
+			}
+		})
+		// #endif
+	}
+}
+
+function storeTokenInfo(info) {
+	uni.setStorageSync('user_info', info)
+	uni.setStorageSync('token', info.token)
 }

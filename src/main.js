@@ -23,4 +23,6 @@ export function createApp() {
     app
   }
 }
+import { mockAPI } from './mock/index.js';
+mockAPI()
 // #endif
