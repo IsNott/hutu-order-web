@@ -10,7 +10,7 @@
     </uni-swiper-dot>
     <view class="top-info box">
       <view class="title" @click="handleClickShopInfo">
-        <view>{{ currentShop.name }}</view>
+        <view>{{ currentShop.shopName }}</view>
         <uni-icons type="right" size="16"></uni-icons>
       </view>
       <view class="offer">
@@ -18,7 +18,6 @@
           <view class="offer-item-desc">立即下单</view>
           <view class="offer-item-title">Order Now</view>
         </view>
-        <!-- 分割线 -->
         <view class="divider"></view>
         <view class="offer-item" @click="clickOfferItem('2')">
           <view class="offer-item-desc">预约点单</view>
@@ -56,19 +55,12 @@
 import { ref, reactive, onMounted, defineProps, defineEmits, watch } from 'vue'
 import { config } from '@/config/index'
 import { HomeAPI } from '@/pages/home/api'
+import {commonNavigate} from '@/utils/CommonUtils'
 const playImages = ref([])
 const playActImages = ref([])
 const current = ref(0)
 const actCurrent = ref(0)
-const imageHeights = reactive({
-  swiper: [],
-  activity: []
-})
-const currentShop = ref({
-  name: '糊涂店（春熙路101号2铺面）',
-  desc: 'hutu-order',
-  address: '春熙路'
-})
+const currentShop = ref({})
 const dotStyle = {
   bottom: 30,
   backgroundColor: 'white',
@@ -83,8 +75,9 @@ const actDotStyle = {
   selectedBorder: ''
 }
 const activity = ref([])
-const vipCard = ref({})
 
+// TODO 获取会员卡信息
+const vipCard = ref({})
 const card = {
   points: 10,
   level: 1,
@@ -100,21 +93,17 @@ const emit = defineEmits([
 const props = defineProps({
 
 })
-// Data
-const data = reactive({})
-
 // Lifecycle hooks
 onMounted(() => {
+  // requestLocationPermission()
   getImage()
   getAct()
-  // getUserInfo()
+  getShopInfo()
 })
 
 // Methods
 const clickOfferItem = (type) => {
-  uni.navigateTo({
-    url: '/pages/order/index?type=' + type
-  })
+  commonNavigate('/pages/order/index?type=' + type)
 }
 
 const getImage = () => {
@@ -132,13 +121,35 @@ const getAct = () => {
   })  
 }
 
-const getUserInfo = () => {
+const getShopInfo = () => {
+  const val = uni.getStorageSync('current_shop')
+  if (val) {
+    currentShop.value = val
+    return
+  }
+  let local = {}
+  uni.getLocation({
+    type: 'gcj02',
+    success: (res) => {
+      console.log('getLocal:' + JSON.stringify(res));
+      local.latitude = res.latitude
+      local.longitude = res.longitude
+    },
+    fail: (error) => {
+      console.log('getLocal failed:' + JSON.stringify(error));
+    }
+  })
+  HomeAPI.queryShopInfo({}).then(res=> {
+    if(res.data.length > 0){
+      currentShop.value = res.data[0]
+      uni.setStorageSync('current_shop', currentShop.value)
+    }
+  })
+
 }
 
 const handleClickShopInfo = () => {
-  uni.navigateTo({
-    url: '/pages/shopInfo/shopInfo'
-  })
+  commonNavigate('/pages/shop/index')
 }
 
 const changeBanner = (e) => {
@@ -151,22 +162,7 @@ const changeActBanner = (e) => {
 
 const clickImage = (img) => {
   if (img.navigation) {
-    uni.navigateTo({
-      url: img.navigation
-    })
-  }
-}
-
-const onImageLoad = (type, e, index) => {
-  const { width, height } = e.detail
-  // 根据图片实际宽高比计算显示高度
-  const viewWidth = 750 // rpx，屏幕宽度
-  const displayHeight = (height / width) * viewWidth
-
-  if (type === 'swiper') {
-    imageHeights.swiper[index] = displayHeight
-  } else if (type === 'activity') {
-    imageHeights.activity[index] = displayHeight
+    commonNavigate(img.navigation)
   }
 }
 // Watchers
@@ -175,8 +171,6 @@ const onImageLoad = (type, e, index) => {
 
 <style scoped lang="scss">
 .body{
-  // overflow-y: auto;
-  // height: 100%;
 }
 
 .box {
@@ -195,7 +189,7 @@ const onImageLoad = (type, e, index) => {
 }
 
 .divider {
- border: 1px solid var(--sencondColor);
+ border: 1px solid rgb(216, 216, 216);
  height: 80rpx;
 }
 
@@ -210,7 +204,6 @@ const onImageLoad = (type, e, index) => {
 
 .activity-card {
   overflow: hidden;
-  // width: 100%;
   height: 25%;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
