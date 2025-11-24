@@ -1,47 +1,45 @@
 <template>
-  <div class="body">
-    <div class="map-container">
+  <view class="body">
+    <view class="map-container">
       <map class="map-box" :class="{ 'map-box-expanded': isExpanded }" :longitude="longitude" :latitude="latitude"
         :markers="markers" :scale="config.scale" :theme="config.theme" @markertap="centerToShop"
         v-if="locationLoaded" />
-    </div>
-    <div class="location-button" :class="{ 'location-button-expanded': isExpanded }" @click="relocal()">
+    </view>
+    <view class="location-button" :class="{ 'location-button-expanded': isExpanded }" @click="relocal()">
       <image src="@/static/icon/local.png" class="location-icon" />
-    </div>
-    <div class="shop-info" :class="{ 'shop-info-expanded': isExpanded }" @touchstart="handleTouchStart"
+    </view>
+    <view class="shop-info" :class="{ 'shop-info-expanded': isExpanded }" @touchstart="handleTouchStart"
       @touchmove="handleTouchMove">
-      <div class="drag-handle">
-        <div class="drag-bar"></div>
-      </div>
+      <view class="drag-handle">
+        <view class="drag-bar"></view>
+      </view>
       <!-- 搜索框 -->
-      <div class="search-box">
-        <div class="search-input">
+      <view class="search-box">
+        <view class="search-input">
           <input type="text" placeholder="搜索门店" v-model="searchParam.keyword" class="search-input-field">
-          <div class="search-icon" @click="getShopInfo()">搜索</div>
-        </div>
-      </div>
-      <div class="shop-list">
-        <div class="shop-info-item" v-for="(shop, index) in shopInfos" :key="index" @click="selectShop(shop)"
+          <view class="search-icon" @click="getShopInfo()">搜索</view>
+        </view>
+      </view>
+      <view class="shop-list">
+        <view class="shop-info-item" v-for="(shop, index) in shopInfos" :key="index" @click="selectShop(shop)"
           :class="{ 'shop-info-item--active': selectedShopId === shop.id }">
-          <div class="shop-info-item-info">
-            <div class="shop-info-item-header">
-              <div class="shop-info-item-info-name">{{ shop.shopName }}</div>
-              <div class="shop-confirm" @click="goToOrder(shop)">
+          <view class="shop-info-item-info">
+            <view class="shop-info-item-header">
+              <view class="shop-info-item-info-name">{{ shop.shopName }}</view>
+              <view class="shop-confirm" @click="goToOrder(shop)">
                 去下单
-              </div>
-            </div>
-            <div class="shop-info-item-header">
-              <div class="shop-info-item-info-address">{{ shop.address }}</div>
-              <div class="shop-distance" v-if="shop.distance">{{ formatDistance(shop.distance) }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="shop-info-footer">
-          暂无更多门店
-        </div>
-      </div>
-    </div>
-  </div>
+              </view>
+            </view>
+            <view class="shop-info-item-header">
+              <view class="shop-info-item-info-address">{{ shop.address }}</view>
+              <view class="shop-distance" v-if="shop.distance">{{ formatDistance(shop.distance) }}</view>
+            </view>
+          </view>
+        </view>
+        <no-more/>
+      </view>
+    </view>
+  </view>
 </template>
 
 <script setup>
@@ -49,7 +47,8 @@ import { ref, onMounted, defineProps, defineEmits, watch, onBeforeMount, compute
 import { HomeAPI } from '@/pages/home/api'
 import { onShow } from '@dcloudio/uni-app'
 import { staticLatAndLongitude } from '@/mock'
-import { commonNavigate } from '@/utils/CommonUtils'
+import { commonNavigate, formatDistance, calculateDistance } from '@/utils/CommonUtils'
+import noMore from '@/component/NoMore.vue'
 
 // Data
 const shopInfos = ref([])
@@ -111,14 +110,6 @@ const getShopInfo = () => {
     selectedShopId.value = null
     generateMarkers()
   })
-}
-
-const formatDistance = (distance) => {
-  if (distance < 1000) {
-    return `${Math.round(distance)}m`
-  } else {
-    return `${(distance / 1000).toFixed(1)}km`
-  }
 }
 
 const relocal = () => {
@@ -202,19 +193,6 @@ const generateMarkers = () => {
     locationLoaded.value = true
   })
   markers.value = [userMarker, ...shopMarkers]
-}
-
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371000 // 地球半径，单位米
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLon = (lon2 - lon1) * Math.PI / 180
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  const distance = R * c
-  return Math.round(distance)
 }
 
 const selectShop = (shop) => {
@@ -544,10 +522,4 @@ const goToOrder = (shop) => {
   }
 }
 
-.shop-info-footer{
-  text-align: center;
-  margin-top: 20rpx;
-  font-size: 26rpx;
-  color: #666;
-}
 </style>

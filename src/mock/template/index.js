@@ -1,0 +1,5 @@
+export const commonResp = {
+  code: 200,
+  message: '成功',
+  data: null
+}

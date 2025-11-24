@@ -41,13 +41,11 @@
     <!-- 活动列表 -->
     <view class="activity-list" v-if="activity.length > 0">
       <view class="activity-info box" :key="index" v-for="act, index in activity">
-        <image class="activity-img" :src="config.baseUrl + act.url" mode="widthFix"/>
+        <image class="activity-img" :src="config.baseUrl + act.url" mode="widthFix" />
       </view>
     </view>
 
-    <view class="footer">
-      —— Hutu-order ——
-    </view>
+    <no-more text="Hutu-order"/>
   </scroll-view>
 </template>
 
@@ -55,7 +53,9 @@
 import { ref, reactive, onMounted, defineProps, defineEmits, watch } from 'vue'
 import { config } from '@/config/index'
 import { HomeAPI } from '@/pages/home/api'
-import {commonNavigate} from '@/utils/CommonUtils'
+import { commonNavigate } from '@/utils/CommonUtils'
+import { staticLatAndLongitude } from '@/mock'
+import noMore from '@/component/NoMore.vue'
 const playImages = ref([])
 const playActImages = ref([])
 const current = ref(0)
@@ -118,7 +118,7 @@ const getAct = () => {
   })
   HomeAPI.getPlayImage(2).then(res => {
     activity.value = res.data
-  })  
+  })
 }
 
 const getShopInfo = () => {
@@ -127,7 +127,10 @@ const getShopInfo = () => {
     currentShop.value = val
     return
   }
-  let local = {}
+  let local = {
+    latitude: staticLatAndLongitude[0],
+    longitude: staticLatAndLongitude[1]
+  }
   uni.getLocation({
     type: 'gcj02',
     success: (res) => {
@@ -139,9 +142,10 @@ const getShopInfo = () => {
       console.log('getLocal failed:' + JSON.stringify(error));
     }
   })
-  HomeAPI.queryShopInfo({}).then(res=> {
-    if(res.data.length > 0){
+  HomeAPI.queryShopInfo({}).then(res => {
+    if (res.data.length > 0) {
       currentShop.value = res.data[0]
+      currentShop.value.distance = calculateDistance(local.latitude, local.longitude, res.data[0].latitude, res.data[0].longitude)
       uni.setStorageSync('current_shop', currentShop.value)
     }
   })
@@ -170,8 +174,7 @@ const clickImage = (img) => {
 </script>
 
 <style scoped lang="scss">
-.body{
-}
+.body {}
 
 .box {
   margin: 20rpx 30rpx;
@@ -189,8 +192,8 @@ const clickImage = (img) => {
 }
 
 .divider {
- border: 1px solid rgb(216, 216, 216);
- height: 80rpx;
+  border: 1px solid rgb(216, 216, 216);
+  height: 80rpx;
 }
 
 .title {
@@ -227,6 +230,7 @@ const clickImage = (img) => {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
+
   .offer-item {
     margin: 10rpx;
     // background-color: #3C2A21 ;
@@ -260,13 +264,5 @@ const clickImage = (img) => {
   width: 100%;
   border-radius: 10px;
   // max-height: 200rpx;
-}
-
-.footer {
-  padding: 6rpx;
-  margin: 0rpx 0rpx;
-  text-align: center;
-  font-size: 22rpx;
-  color: gray;
 }
 </style>
