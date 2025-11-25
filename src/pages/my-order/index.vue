@@ -167,7 +167,7 @@
 					const shopInfo = res.data
 					uni.setStorage({
 						data: shopInfo,
-						key: 'current_shop',
+						key: 'CURRENT_SHOP',
 						success:() => {
 							uni.switchTab({
 								url: '/pages/order/index'

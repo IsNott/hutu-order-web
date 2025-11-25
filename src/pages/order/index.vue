@@ -132,7 +132,7 @@ onMounted(() => {
 
 // Methods
 const getCurrentShop = () => {
-  currentShop.value = uni.getStorageSync('current_shop')
+  currentShop.value = uni.getStorageSync('CURRENT_SHOP')
 }
 
 const handleClickShopInfo = () => {

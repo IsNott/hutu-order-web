@@ -35,7 +35,7 @@
 						success(res) {
 							if (res.confirm) {
 								uni.removeStorageSync('user_info')
-								uni.removeStorageSync('current_shop')
+								uni.removeStorageSync('CURRENT_SHOP')
 								logout().then(res => {
 									uni.showToast({
 										icon: 'success',
@@ -53,7 +53,7 @@
 					content: '清除后需要重新选择门店进行点单，是否继续？',
 					success(res) {
 						if (res.confirm) {
-							uni.removeStorageSync('current_shop')
+							uni.removeStorageSync('CURRENT_SHOP')
 							uni.showToast({
 								icon: 'success',
 								title: '清除成功'

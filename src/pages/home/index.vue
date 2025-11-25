@@ -53,7 +53,7 @@
 import { ref, reactive, onMounted, defineProps, defineEmits, watch } from 'vue'
 import { config } from '@/config/index'
 import { HomeAPI } from '@/pages/home/api'
-import { commonNavigate } from '@/utils/CommonUtils'
+import { commonNavigate, calculateDistance } from '@/utils/CommonUtils'
 import { staticLatAndLongitude } from '@/mock'
 import noMore from '@/component/NoMore.vue'
 const playImages = ref([])
@@ -122,7 +122,7 @@ const getAct = () => {
 }
 
 const getShopInfo = () => {
-  const val = uni.getStorageSync('current_shop')
+  const val = uni.getStorageSync('CURRENT_SHOP')
   if (val) {
     currentShop.value = val
     return
@@ -146,7 +146,7 @@ const getShopInfo = () => {
     if (res.data.length > 0) {
       currentShop.value = res.data[0]
       currentShop.value.distance = calculateDistance(local.latitude, local.longitude, res.data[0].latitude, res.data[0].longitude)
-      uni.setStorageSync('current_shop', currentShop.value)
+      uni.setStorageSync('CURRENT_SHOP', currentShop.value)
     }
   })
 

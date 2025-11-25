@@ -136,7 +136,7 @@
 			},
 			// 查询当前门店
 			queryCurrentMerchant() {
-				const val = uni.getStorageSync('current_shop')
+				const val = uni.getStorageSync('CURRENT_SHOP')
 				if (val) {
 					this.currentMerchant = val;
 				} else {
@@ -153,7 +153,7 @@
 								shopList().then(res => {
 									const data = res.data;
 									const currentShop = data.find(obj => obj.closeNow !== 1 && obj.open)
-									uni.setStorageSync('current_shop', currentShop)
+									uni.setStorageSync('CURRENT_SHOP', currentShop)
 									this.currentMerchant = currentShop
 								})
 							}

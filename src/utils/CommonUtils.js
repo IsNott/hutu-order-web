@@ -119,7 +119,7 @@ export function handleImageUrlArray(urlStr) {
 }
 
 export function getShopInfo() {
-	return uni.getStorageSync('current_shop')
+	return uni.getStorageSync('CURRENT_SHOP')
 }
 
 export function checkPhone(val) {

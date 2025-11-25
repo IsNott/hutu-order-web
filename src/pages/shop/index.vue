@@ -234,7 +234,7 @@ const handleTouchMove = (e) => {
 }
 
 const goToOrder = (shop) => {
-  uni.setStorageSync('current_shop', shop)
+  uni.setStorageSync('CURRENT_SHOP', shop)
   commonNavigate('/pages/order/index')
 }
 // Watchers

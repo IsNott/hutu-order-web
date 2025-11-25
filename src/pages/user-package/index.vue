@@ -181,7 +181,7 @@
 				}
 			},
 			getShopInfo() {
-				this.currentShopInfo = uni.getStorageSync('current_shop')
+				this.currentShopInfo = uni.getStorageSync('CURRENT_SHOP')
 			},
 			queryPackage() {
 				queryUserPackage().then(res => {
