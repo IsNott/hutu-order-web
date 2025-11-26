@@ -45,8 +45,54 @@
         <no-more />
       </scroll-view>
     </view>
-    <view v-if="cart.length > 0" class="cart box">
-
+    <view v-if="cart.length > 0" class="cart-box" @click="toggleCartDetail">
+      <view class="cart-icon">
+        <uni-icons type="cart" size="24" color="#fff"></uni-icons>
+        <view v-if="totalQuantity > 0" class="cart-badge">{{ totalQuantity }}</view>
+      </view>
+      <view class="cart-info">
+        <view class="cart-total">¥{{ totalPrice }}</view>
+        <view class="cart-desc">已选{{ totalQuantity }}件商品</view>
+      </view>
+      <view class="cart-action">
+        <view class="checkout-btn">去结算</view>
+      </view>
+    </view>
+    <view class="cart-mask" v-if="showCartDetail && cart.length > 0" @click="toggleCartDetail"></view>
+    <view class="cart-detail" v-if="cart.length > 0" :class="{ 'cart-detail-show': showCartDetail }">
+      <view class="cart-detail-header">
+        <view class="cart-detail-title">购物袋</view>
+        <!-- <view class="cart-detail-clear" @click="showSelectRadio">
+          <uni-icons type="bars" size="24" color="gray"></uni-icons>
+        </view> -->
+        <view class="cart-detail-clear" @click="clearCart">
+          <uni-icons type="trash" size="16" color="gray"></uni-icons>
+          清空
+        </view>
+      </view>
+      <scroll-view class="cart-detail-list box" scroll-y>
+        <view v-for="(item, index) in cart" :key="item.id" class="cart-detail-item">
+          <!-- <radio v-if="selectRadio"
+            :value="item.id"
+          /> -->
+          <view class="cart-item-image">
+            <image :src="item.cover" mode="aspectFill" style="height: 64px;width: 64px;"></image>
+          </view>
+          <view class="cart-item-info">
+            <view class="cart-item-name">{{ item.name }}</view>
+            <view class="cart-item-price">¥{{ item.price }}</view>
+          </view>
+          <view class="cart-item-actions">
+            <button class="cart-item-btn minus" @click.stop="decreaseQuantity(item)">
+              <uni-icons type="back" size="16" color="#007AFF"></uni-icons>
+            </button>
+            <view class="cart-item-quantity">{{ item.quantity }}</view>
+            <button class="cart-item-btn plus" @click.stop="increaseQuantity(item)">
+              <uni-icons type="forward" size="16" color="#007AFF"></uni-icons>
+            </button>
+          </view>
+        </view>
+      </scroll-view>
     </view>
   </view>
 </template>
@@ -67,7 +113,9 @@ const scrollIntoView = ref('')
 const sectionPositions = ref([])
 const isScrolling = ref(false)
 const cart = ref([])
-
+const showCartDetail = ref(false)
+const selectRadio = ref(false)
+const cartSelected = ref([])
 // Computed
 const sideCatalogs = computed(() => {
   return catalogs.value.filter(catalog => catalog.showSide)
@@ -75,6 +123,16 @@ const sideCatalogs = computed(() => {
 
 const allCatalogs = computed(() => {
   return catalogs.value
+})
+
+// 购物车总数量
+const totalQuantity = computed(() => {
+  return cart.value.reduce((total, item) => total + (item.quantity || 1), 0)
+})
+
+// 购物车总价格
+const totalPrice = computed(() => {
+  return cart.value.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0).toFixed(2)
 })
 
 // Emits
@@ -93,6 +151,12 @@ watch(() => currentShop.value, (newValue, oldValue) => {
   getCatalogAndMenu()
 })
 
+watch(() => cart.value, () => { 
+  if(cart.value.length == 0){
+    toggleCartDetail()
+  }
+})
+
 // Methods
 const getCurrentShop = () => {
   currentShop.value = uni.getStorageSync('CURRENT_SHOP')
@@ -108,10 +172,10 @@ const getCatalogAndMenu = async () => {
       orderAPI.getCatalogByShop(currentShop.value.id),
       orderAPI.getMenuByShop(currentShop.value.id)
     ])
-    
+
     catalogs.value = catalogRes.data
     menus.value = menuRes.data
-    
+
   } catch (error) {
     console.error('获取数据失败:', error)
   } finally {
@@ -186,13 +250,48 @@ const calculateSectionPositions = () => {
 }
 
 const addToCart = (menu) => {
-  cart.value.push(menu)
+  const existingItem = cart.value.find(item => item.id === menu.id)
+  if (existingItem) {
+    existingItem.quantity = (existingItem.quantity || 1) + 1
+  } else {
+    cart.value.push({
+      ...menu,
+      quantity: 1
+    })
+  }
 }
 
-// Watchers
-watch(() => currentShop.value, (newValue, oldValue) => {
+const showSelectRadio = () => { 
+  selectRadio.value = !selectRadio.value
+}
 
-})
+const increaseQuantity = (item) => {
+  item.quantity = (item.quantity || 1) + 1
+}
+
+const decreaseQuantity = (item) => {
+  if (item.quantity > 1) {
+    item.quantity -= 1
+  } else {
+    const index = cart.value.findIndex(cartItem => cartItem.id === item.id)
+    if (index !== -1) {
+      cart.value.splice(index, 1)
+    }
+  }
+}
+
+const removeFromCart = (index) => {
+  cart.value.splice(index, 1)
+}
+
+const clearCart = () => {
+  cart.value = []
+  showCartDetail.value = false
+}
+
+const toggleCartDetail = () => {
+  showCartDetail.value = !showCartDetail.value
+}
 </script>
 
 <style scoped lang="scss">
@@ -397,5 +496,199 @@ watch(() => currentShop.value, (newValue, oldValue) => {
       }
     }
   }
+}
+
+.cart-box {
+  position: fixed;
+  bottom: 0rpx;
+  // border-radius: 100rpx;
+  left: 0rpx;
+  right: 0rpx;
+  height: 100rpx;
+  background: #333;
+  display: flex;
+  align-items: center;
+  padding: 0 30rpx;
+  z-index: 200;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.cart-icon {
+  position: relative;
+  width: 80rpx;
+  height: 80rpx;
+  background: #007AFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -10rpx;
+  right: -10rpx;
+  background: #ff4444;
+  color: white;
+  border-radius: 50%;
+  width: 40rpx;
+  height: 40rpx;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.cart-info {
+  flex: 1;
+  color: white;
+}
+
+.cart-total {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.cart-desc {
+  font-size: 24rpx;
+  color: #ccc;
+}
+
+.cart-action {
+  margin-left: auto;
+}
+
+.checkout-btn {
+  background: #007AFF;
+  color: white;
+  padding: 20rpx 40rpx;
+  border-radius: 50rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+// 购物车遮罩层
+.cart-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 199;
+}
+
+// 购物车详情
+.cart-detail {
+  position: fixed;
+  // bottom: -80vh;
+  left: 0;
+  right: 0;
+  // height: 60vh;
+  background: white;
+  border-radius: 30rpx 30rpx 0 0;
+  z-index: 200;
+  transition: bottom 0.3s ease;
+  display: flex;
+  flex-direction: column;
+
+  &.cart-detail-show {
+    bottom: 100rpx;
+  }
+}
+
+.cart-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.cart-detail-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.cart-detail-clear {
+  font-size: 24rpx;
+  color: #a7a7a7;
+  padding: 10rpx 20rpx;
+}
+
+.cart-detail-list {
+  flex: 1;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.cart-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  background: #f8f8f8;
+  border-radius: 16rpx;
+}
+
+.cart-item-info {
+  flex: 1;
+}
+
+.cart-item-image{
+  margin: 0 20rpx;
+}
+
+.cart-item-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.cart-item-price {
+  font-size: 26rpx;
+  color: #e54847;
+  font-weight: bold;
+}
+
+.cart-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.cart-item-btn {
+  width: 50rpx;
+  height: 50rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid #007AFF;
+  background: white;
+
+  &.minus,
+  &.plus {
+    border-color: #007AFF;
+  }
+
+  &.delete {
+    border-color: #ff4444;
+    margin-left: 10rpx;
+  }
+}
+
+.cart-item-quantity {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  min-width: 60rpx;
+  text-align: center;
 }
 </style>
