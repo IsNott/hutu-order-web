@@ -11,51 +11,24 @@
       </view>
       <view class="right-info">
         <view class="btn-group">
-          <view 
-            class="btn" 
-            :class="{ 'active' : pickUpType === 0 }"
-            @click="pickUpType = 0"
-          >堂食</view>
-          <view 
-            class="btn" 
-            :class="{ 'active' : pickUpType === 1 }"
-            @click="pickUpType = 1"
-          >外带</view>
+          <view class="btn" :class="{ 'active': pickUpType === 0 }" @click="pickUpType = 0">堂食</view>
+          <view class="btn" :class="{ 'active': pickUpType === 1 }" @click="pickUpType = 1">外带</view>
         </view>
       </view>
     </view>
     <view class="content box">
       <scroll-view class="catalog-list" scroll-y>
-        <view 
-          v-for="catalog in sideCatalogs" 
-          class="catalog-item" 
-          :class="{ 'active' : activeCatalog === catalog.id }" 
-          :key="catalog.id" 
-          @click="handleClickCatalog(catalog)"
-        >
+        <view v-for="catalog in sideCatalogs" class="catalog-item" :class="{ 'active': activeCatalog === catalog.id }"
+          :key="catalog.id" @click="handleClickCatalog(catalog)">
           {{ catalog.name }}
         </view>
       </scroll-view>
-      <scroll-view 
-        class="menu-list" 
-        scroll-y 
-        @scroll="handleMenuScroll"
-        :scroll-top="menuScrollTop"
-        scroll-with-animation
-        :scroll-into-view="scrollIntoView"
-      >
-        <view 
-          v-for="catalog in allCatalogs" 
-          :key="catalog.id" 
-          class="menu-catalog-section"
-          :id="'catalog-' + catalog.id"
-        >
+      <scroll-view class="menu-list" scroll-y @scroll="handleMenuScroll" :scroll-top="menuScrollTop"
+        scroll-with-animation :scroll-into-view="scrollIntoView" :show-scrollbar="false">
+        <view v-for="catalog in allCatalogs" :key="catalog.id" class="menu-catalog-section"
+          :id="'catalog-' + catalog.id">
           <view class="catalog-title">{{ catalog.name }}</view>
-          <view 
-            v-for="menu in getMenusByCatalog(catalog.id)" 
-            :key="menu.id" 
-            class="menu-item"
-          > 
+          <view v-for="menu in getMenusByCatalog(catalog.id)" :key="menu.id" class="menu-item">
             <image class="menu-image" :src="menu.cover" mode="aspectFill"></image>
             <view class="menu-item-info">
               <view class="menu-item-name">{{ menu.name }}</view>
@@ -94,6 +67,7 @@ const scrollIntoView = ref('')
 const sectionPositions = ref([])
 const isScrolling = ref(false)
 const cart = ref([])
+
 // Computed
 const sideCatalogs = computed(() => {
   return catalogs.value.filter(catalog => catalog.showSide)
@@ -106,28 +80,17 @@ const allCatalogs = computed(() => {
 // Emits
 const emit = defineEmits([])
 
-// fake data
-const shop = {
-  shopName: 'Hutu Coffee',
-  address: '香港特别行政区 油尖旺区',
-  phone: '123456789',
-  logo: '/static/logo.png',
-  banner: '/static/banner.png',
-  description: 'Hutu Coffee is a coffee shop in Hong Kong.',
-  latitude: 22.306583887776,
-  longitude: 114.17854456,
-  openTime: '08:00',
-  closeTime: '22:00',
-  tag: '新店优惠',
-  distance: 500
-}
-
 // Props
 const props = defineProps({})
 
 // Lifecycle hooks
 onMounted(() => {
   getCurrentShop()
+})
+
+
+watch(() => currentShop.value, (newValue, oldValue) => {
+  getCatalogAndMenu()
 })
 
 // Methods
@@ -139,20 +102,23 @@ const handleClickShopInfo = () => {
   commonNavigate('/pages/shop/index')
 }
 
-const getCatalog = () => {
-  orderAPI.getCatalogByShop(currentShop.value.id).then(res => { 
-    catalogs.value = res.data
-  })
-}
-
-const getMenu = () => {
-  orderAPI.getMenuByShop(currentShop.value.id).then(res => { 
-    menus.value = res.data
-  })
-  // 计算各个分类区域的位置
-  nextTick(() => {
-    calculateSectionPositions()
-  })
+const getCatalogAndMenu = async () => {
+  try {
+    const [catalogRes, menuRes] = await Promise.all([
+      orderAPI.getCatalogByShop(currentShop.value.id),
+      orderAPI.getMenuByShop(currentShop.value.id)
+    ])
+    
+    catalogs.value = catalogRes.data
+    menus.value = menuRes.data
+    
+  } catch (error) {
+    console.error('获取数据失败:', error)
+  } finally {
+    nextTick(() => {
+      calculateSectionPositions()
+    })
+  }
 }
 
 const getMenusByCatalog = (catalogId) => {
@@ -161,13 +127,13 @@ const getMenusByCatalog = (catalogId) => {
 
 const handleClickCatalog = (catalog) => {
   if (isScrolling.value) return
-  
+
   activeCatalog.value = catalog.id
   isScrolling.value = true
-  
+
   // 滚动到对应的分类区域
   scrollIntoView.value = 'catalog-' + catalog.id
-  
+
   // 重置 scrollIntoView 以便下次可以再次触发
   setTimeout(() => {
     scrollIntoView.value = ''
@@ -177,11 +143,11 @@ const handleClickCatalog = (catalog) => {
 
 const handleMenuScroll = (e) => {
   if (isScrolling.value) return
-  
+
   const scrollTop = e.detail.scrollTop
-  
+
   let currentSectionId = activeCatalog.value
-  
+
   for (let i = sectionPositions.value.length - 1; i >= 0; i--) {
     const section = sectionPositions.value[i]
     if (scrollTop >= section.top - 200) { // 减去偏移量
@@ -189,21 +155,22 @@ const handleMenuScroll = (e) => {
       break
     }
   }
-  
+
   if (activeCatalog.value !== currentSectionId) {
     activeCatalog.value = currentSectionId
   }
 }
 
 const calculateSectionPositions = () => {
+
   sectionPositions.value = []
-  
+
   const query = uni.createSelectorQuery()
-  
+
   allCatalogs.value.forEach(catalog => {
     query.select('#catalog-' + catalog.id).boundingClientRect()
   })
-  
+
   query.exec((res) => {
     res.forEach((rect, index) => {
       if (rect) {
@@ -213,22 +180,18 @@ const calculateSectionPositions = () => {
         })
       }
     })
-    
+
     sectionPositions.value.sort((a, b) => a.top - b.top)
   })
 }
 
 const addToCart = (menu) => {
-  console.log('添加商品到购物车:', menu)
   cart.value.push(menu)
 }
 
 // Watchers
 watch(() => currentShop.value, (newValue, oldValue) => {
-  if (newValue) {
-    getCatalog()
-    getMenu()
-  } 
+
 })
 </script>
 
@@ -319,7 +282,7 @@ watch(() => currentShop.value, (newValue, oldValue) => {
   color: #007AFF;
   background-color: #fff;
   transition: all 0.3s ease;
-  
+
   &.active {
     background-color: #007AFF;
     color: #fff;
@@ -333,7 +296,7 @@ watch(() => currentShop.value, (newValue, oldValue) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  
+
   .catalog-item {
     padding: 30rpx 20rpx;
     font-size: 26rpx;
@@ -343,7 +306,7 @@ watch(() => currentShop.value, (newValue, oldValue) => {
     border-left: 4rpx solid transparent;
     transition: all 0.3s ease;
     cursor: pointer;
-    
+
     &.active {
       background-color: #ffffff;
       color: #007AFF;
@@ -361,7 +324,7 @@ watch(() => currentShop.value, (newValue, oldValue) => {
 
 .menu-catalog-section {
   padding: 20rpx;
-  
+
   .catalog-title {
     font-size: 32rpx;
     font-weight: bold;
@@ -378,7 +341,7 @@ watch(() => currentShop.value, (newValue, oldValue) => {
   margin-bottom: 20rpx;
   background-color: #fafafa;
   border-radius: 16rpx;
-  
+
   .menu-image {
     width: 120rpx;
     height: 120rpx;
@@ -386,35 +349,35 @@ watch(() => currentShop.value, (newValue, oldValue) => {
     margin-right: 20rpx;
     background-color: #e0e0e0;
   }
-  
+
   .menu-item-info {
     flex: 1;
-    
+
     .menu-item-name {
       font-size: 28rpx;
       font-weight: bold;
       color: #333;
       margin-bottom: 8rpx;
     }
-    
+
     .menu-item-desc {
       font-size: 22rpx;
       color: #999;
       margin-bottom: 12rpx;
       line-height: 1.4;
     }
-    
+
     .menu-item-price {
       font-size: 26rpx;
       font-weight: bold;
       color: #e54847;
     }
   }
-  
+
   .menu-item-action {
     display: flex;
     align-items: flex-end;
-    
+
     .add-btn {
       width: 60rpx;
       height: 60rpx;
@@ -427,7 +390,7 @@ watch(() => currentShop.value, (newValue, oldValue) => {
       border: none;
       font-size: 28rpx;
       font-weight: bold;
-      
+
       &:active {
         background-color: #0056cc;
         transform: scale(0.95);
