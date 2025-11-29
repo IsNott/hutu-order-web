@@ -3,11 +3,11 @@
     <view class="header box">
       <view class="left-info">
         <view class="title" @click="handleClickShopInfo">
-          <view class="shop-name">{{ currentShop.shopName }}</view>
+          <view class="shop-name">{{ currentShop?.shopName }}</view>
           <uni-icons type="right" size="14"></uni-icons>
         </view>
-        <view class="address">{{ currentShop.address }}</view>
-        <view class="distance" v-if="currentShop.distance">距离{{ formatDistance(currentShop.distance) }}</view>
+        <view class="address">{{ currentShop?.address }}</view>
+        <view class="distance" v-if="currentShop?.distance">距离{{ formatDistance(currentShop?.distance) }}</view>
       </view>
       <view class="right-info">
         <view class="btn-group">
@@ -28,7 +28,7 @@
         <view v-for="catalog in allCatalogs" :key="catalog.id" class="menu-catalog-section"
           :id="'catalog-' + catalog.id">
           <view class="catalog-title">{{ catalog.name }}</view>
-          <view v-for="menu in getMenusByCatalog(catalog.id)" :key="menu.id" class="menu-item">
+          <view v-for="menu in getMenusByCatalog(catalog.id)" :key="menu.id" class="menu-item" @click="goToDetail(menu)">
             <image class="menu-image" :src="menu.cover" mode="aspectFill"></image>
             <view class="menu-item-info">
               <view class="menu-item-name">{{ menu.name }}</view>
@@ -36,7 +36,7 @@
               <view class="menu-item-price">¥{{ menu.price }}</view>
             </view>
             <view class="menu-item-action">
-              <button class="add-btn" @click="addToCart(menu)">
+              <button class="add-btn" @click="goToDetail(menu)">
                 <uni-icons type="plusempty" size="18" color="white"></uni-icons>
               </button>
             </view>
@@ -81,12 +81,15 @@
           <view class="cart-item-info">
             <view class="cart-item-name">{{ item.name }}</view>
             <view class="cart-item-price">¥{{ item.price }}</view>
+            <view class="cart-item-sku">
+              <view v-for="(option, index) in item.skus" :key="index" class="sku-label">{{ option.label }}</view>
+            </view>
           </view>
           <view class="cart-item-actions">
             <button class="cart-item-btn minus" @click.stop="decreaseQuantity(item)">
               <uni-icons type="back" size="16" color="#007AFF"></uni-icons>
             </button>
-            <view class="cart-item-quantity">{{ item.quantity }}</view>
+            <view class="cart-item-count">{{ item.count }}</view>
             <button class="cart-item-btn plus" @click.stop="increaseQuantity(item)">
               <uni-icons type="forward" size="16" color="#007AFF"></uni-icons>
             </button>
@@ -102,7 +105,9 @@ import { ref, reactive, onMounted, defineProps, defineEmits, watch, nextTick, co
 import { commonNavigate, formatDistance } from '@/utils/CommonUtils'
 import { orderAPI } from './api'
 import noMore from '@/component/NoMore.vue'
+import { onLoad } from '@dcloudio/uni-app'
 // Data
+const orderType = ref('now')
 const currentShop = ref(null)
 const pickUpType = ref(0)
 const catalogs = ref([])
@@ -127,12 +132,12 @@ const allCatalogs = computed(() => {
 
 // 购物车总数量
 const totalQuantity = computed(() => {
-  return cart.value.reduce((total, item) => total + (item.quantity || 1), 0)
+  return cart.value.reduce((total, item) => total + (item.count || 1), 0)
 })
 
 // 购物车总价格
 const totalPrice = computed(() => {
-  return cart.value.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0).toFixed(2)
+  return cart.value.reduce((total, item) => total + (item.price * (item.count || 1)), 0).toFixed(2)
 })
 
 // Emits
@@ -144,6 +149,11 @@ const props = defineProps({})
 // Lifecycle hooks
 onMounted(() => {
   getCurrentShop()
+  getMyPackage()
+})
+
+onLoad((opt) => {
+  orderType.value = opt.orderType
 })
 
 
@@ -160,6 +170,13 @@ watch(() => cart.value, () => {
 // Methods
 const getCurrentShop = () => {
   currentShop.value = uni.getStorageSync('CURRENT_SHOP')
+}
+
+const getMyPackage = () => {
+  orderAPI.queryMyPackage().then(res => {
+    console.log('getMyPackage:' , res);
+    cart.value = res.data
+  })
 }
 
 const handleClickShopInfo = () => {
@@ -252,13 +269,17 @@ const calculateSectionPositions = () => {
 const addToCart = (menu) => {
   const existingItem = cart.value.find(item => item.id === menu.id)
   if (existingItem) {
-    existingItem.quantity = (existingItem.quantity || 1) + 1
+    existingItem.count = (existingItem.count || 1) + 1
   } else {
     cart.value.push({
       ...menu,
-      quantity: 1
+      count: 1
     })
   }
+}
+
+const goToDetail = (item) => {
+  commonNavigate('/pages/item-detail/index?id=' + item.id)
 }
 
 const showSelectRadio = () => { 
@@ -266,12 +287,12 @@ const showSelectRadio = () => {
 }
 
 const increaseQuantity = (item) => {
-  item.quantity = (item.quantity || 1) + 1
+  item.count = (item.count || 1) + 1
 }
 
 const decreaseQuantity = (item) => {
-  if (item.quantity > 1) {
-    item.quantity -= 1
+  if (item.count > 1) {
+    item.count -= 1
   } else {
     const index = cart.value.findIndex(cartItem => cartItem.id === item.id)
     if (index !== -1) {
@@ -684,7 +705,22 @@ const toggleCartDetail = () => {
   }
 }
 
-.cart-item-quantity {
+.cart-item-sku{
+  font-size: 22rpx;
+  color: #999;
+  margin-bottom: 12rpx;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  // justify-content: space-between;
+  flex-wrap: wrap;
+  & > span {
+    display: block;
+  }
+}
+
+.cart-item-count {
   font-size: 28rpx;
   font-weight: bold;
   color: #333;

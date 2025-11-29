@@ -50,8 +50,8 @@
     </view>
 
     <!-- 活动卡 -->
-    <view class="activity-list box">
-      <view class="activity-info" :key="index" v-for="act, index in activity">
+    <view class="activity-list" v-if="activity.length > 0">
+      <view class="activity-info box" :key="index" v-for="act, index in activity">
         <image class="activity-img" :src="config.baseUrl + act.url" mode="widthFix" />
       </view>
     </view>
@@ -153,9 +153,9 @@ const feature = [
 
 const fakeActivity = [
   {
-    url: '/static/1905083114506674177.png',
-    title: '会员卡',
-    navigation: '/pages/order/index'
+    url: '/static/vip-act.png',
+    title: '会员充值',
+    navigation: ''
   }
 ]
 
@@ -366,20 +366,13 @@ const toggleExpand = () => {
   }
 }
 
-.activity-list {
+.activity-info {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.activity-img {
   width: 100%;
-  margin-top: 20rpx;
-  .activity-info {
-    background-color: white;
-    border-radius: 20rpx;
-    margin-bottom: 20rpx;
-    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    
-    .activity-img {
-      width: 100%;
-      border-radius: 15rpx;
-    }
-  }
+  border-radius: 10px;
+  // max-height: 200rpx;
 }
 </style>

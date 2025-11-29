@@ -9,33 +9,40 @@
       </swiper>
     </uni-swiper-dot>
     <view class="top-info box">
-      <view class="title" @click="handleClickShopInfo">
-        <view>{{ currentShop.shopName }}</view>
-        <uni-icons type="right" size="16"></uni-icons>
+    <view class="title" @click="handleClickShopInfo">
+      <view class="shop-info">
+        <view class="shop-name">{{ currentShop.shopName }}</view>
+        <view class="shop-distance" v-if="currentShop.distance">
+          距离{{ currentShop.distance }}km
+        </view>
       </view>
-      <view class="offer">
-        <view class="offer-item" @click="clickOfferItem('1')">
-          <view class="offer-item-desc">立即下单</view>
-          <view class="offer-item-title">Order Now</view>
-        </view>
-        <view class="divider"></view>
-        <view class="offer-item" @click="clickOfferItem('2')">
-          <view class="offer-item-desc">预约点单</view>
-          <view class="offer-item-title">Schedule</view>
-        </view>
+      <uni-icons type="right" size="16" color="white"></uni-icons>
+    </view>
+    <view class="offer">
+      <view class="offer-item" @click="clickOfferItem('now')">
+        <view class="offer-item-desc">立即下单</view>
+        <view class="offer-item-title">Order Now</view>
+      </view>
+      <view class="divider"></view>
+      <view class="offer-item" @click="clickOfferItem('schedule')">
+        <view class="offer-item-desc">预约点单</view>
+        <view class="offer-item-title">Schedule</view>
       </view>
     </view>
+  </view>
     <!-- 轮播活动卡 -->
-    <view class="activity-card box">
-      <uni-swiper-dot :info="playActImages" :current="actCurrent" mode="round" field="content"
-        :dots-styles="actDotStyle">
-        <swiper class="swiper" @change="changeActBanner" :current="actCurrent" :autoplay='true' next-margin="20rpx">
-          <swiper-item class="swiper-item" v-for="(item, index) in playActImages" :key="index"
-            @click="clickImage(item)">
-            <image class="swiper-image" :src="config.baseUrl + item.url" mode="widthFix" />
-          </swiper-item>
-        </swiper>
-      </uni-swiper-dot>
+     <view class="activity-card box">
+      <view class="act-banner-container">
+        <uni-swiper-dot :info="playActImages" :current="actCurrent" mode="round" field="content"
+          :dots-styles="actDotStyle">
+          <swiper class="swiper" @change="changeActBanner" :current="actCurrent" :autoplay='true' next-margin="20rpx">
+            <swiper-item class="swiper-item" v-for="(item, index) in playActImages" :key="index"
+              @click="clickImage(item)">
+              <image class="act-swiper-image" :src="config.baseUrl + item.url" mode="aspectFill" />
+            </swiper-item>
+          </swiper>
+        </uni-swiper-dot>
+      </view>
     </view>
 
     <!-- 活动列表 -->
@@ -103,20 +110,23 @@ onMounted(() => {
 
 // Methods
 const clickOfferItem = (type) => {
-  commonNavigate('/pages/order/index?type=' + type)
+  commonNavigate('/pages/order/index?orderType=' + type)
 }
 
 const getImage = () => {
   HomeAPI.getPlayImage(0).then(res => {
+    console.log('getImage0:' , res);
     playImages.value = res.data
   })
 }
 
 const getAct = () => {
   HomeAPI.getPlayImage(1).then(res => {
+    console.log('getImage1:' , res);
     playActImages.value = res.data
   })
   HomeAPI.getPlayImage(2).then(res => {
+    console.log('getImage2:' , res);
     activity.value = res.data
   })
 }
@@ -182,33 +192,116 @@ const clickImage = (img) => {
 }
 
 .top-info {
-  padding: 6rpx;
-  background-color: white;
-  border-radius: 10rpx;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #6e675e 0%, #5a5b5c 100%);
+  border-radius: 20rpx;
   z-index: 1;
   position: relative;
   top: -40rpx;
   margin-top: 0rpx;
-}
-
-.divider {
-  border: 1px solid rgb(216, 216, 216);
-  height: 80rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 241, 223, 0.3);
 }
 
 .title {
-  font-size: 20rpx;
-  text-align: right;
-  margin: 10rpx 0rpx;
   display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  
+  .shop-info {
+    display: flex;
+    flex-direction: column;
+    
+    .shop-name {
+      font-size: 30rpx;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 8rpx;
+      letter-spacing: 1rpx;
+    }
+    
+    .shop-distance {
+      font-size: 20rpx;
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+}
+
+.divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 20rpx;
+}
+
+.offer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .offer-item {
+    flex: 1;
+    padding: 24rpx;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 16rpx;
+    text-align: center;
+    backdrop-filter: blur(10rpx);
+    border: 1rpx solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    
+    &:active {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(0.98);
+    }
+  }
+
+  .offer-item-title {
+    font-size: 24rpx;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 8rpx;
+  }
+
+  .offer-item-desc {
+    font-weight: bold;
+    font-size: 32rpx;
+    color: white;
+    letter-spacing: 2rpx;
+  }
 }
 
 .activity-card {
   overflow: hidden;
-  height: 25%;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  
+  .act-banner-container {
+    overflow: hidden;
+    border-radius: 10rpx;
+    
+    .swiper {
+      height: 200rpx;
+    }
+    
+    .swiper-item {
+      display: block;
+      height: 200rpx;
+      line-height: 200rpx;
+      text-align: center;
+    }
+    
+    .act-swiper-image {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    
+    :deep(.uni-swiper__dots-box) {
+      margin-left: 10rpx !important;
+      justify-content: flex-start !important;
+      bottom: 10rpx !important;
+    }
+  }
 }
 
 .swiper {
@@ -224,31 +317,6 @@ const clickImage = (img) => {
 
 .activity-info {
   background-color: rgba(0, 0, 0, 0);
-}
-
-.offer {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-
-  .offer-item {
-    margin: 10rpx;
-    // background-color: #3C2A21 ;
-    padding: 20rpx 40rpx;
-    // border-radius: 4rpx;
-    font-size: 30rpx;
-    text-align: center;
-  }
-
-  .offer-item-title {
-    margin-bottom: 6rpx;
-  }
-
-  .offer-item-desc {
-    font-weight: bold;
-    font-size: 38rpx;
-    margin-bottom: 4rpx;
-  }
 }
 
 :deep(.uni-swiper__dots-box) {
