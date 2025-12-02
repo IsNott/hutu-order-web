@@ -3,6 +3,7 @@ import { OrderAPIResultTemplate } from './template/order.js'
 import { HomeAPIResultTemplate } from './template/home.js'
 import { ShopAPIResultTemplate } from './template/shop.js'
 import { ItemDetailAPIResultTemplate } from './template/itemDetail.js'
+import { AuthAPIResultTemplate } from './template/authority.js'
 import { commonResp } from './template/'
 const baseUrl = 'http://localhost:9999/hutu-api'
 
@@ -47,4 +48,5 @@ export function mockAPI() {
   Mock.mock(new RegExp(`${baseUrl}/bizMenu/listByShopCatalogId/\\d+`), OrderAPIResultTemplate.getMenu);
   Mock.mock(`${baseUrl}/bizPackage/add`, commonResp);
   Mock.mock(`${baseUrl}/bizPackage/queryMyPackage`, ItemDetailAPIResultTemplate.myPackage);
+  Mock.mock(`${baseUrl}/auth/loginByPhone`, AuthAPIResultTemplate.userInfo);
 }

@@ -85,6 +85,8 @@ import { config } from '@/config/index'
 import { onLoad } from '@dcloudio/uni-app'
 import { commonNavigate } from '../../utils/CommonUtils'
 import { ItemDetailAPI } from './api'
+import { submitOrder } from '@/utils/CommonUtils'
+
 // Data
 const id = ref()
 const item = ref({})
@@ -98,6 +100,8 @@ const dotStyle = {
 }
 const count = ref(1)
 const selectedSkuOptions = ref([])
+const pickUpType = ref('')
+const orderType = ref('')
 // Computed
 const countPrice = computed(() => {
   return item.value.price * count.value + selectedSkuOptions.value.reduce((acc, option) => acc + (option.addonalPrice || 0), 0)
@@ -251,6 +255,8 @@ onMounted(() => {
 })
 onLoad((opt) => {
   id.value = opt.id
+  pickUpType.value = opt.pickUpType
+  orderType.value = opt.orderType
 })
 // Watchers
 
@@ -307,8 +313,16 @@ const handleAddToCart = () => {
 
 const handleBuyNow = () => {
   if (!canAddToCart.value) return
-  console.log('立即购买')
-  // 立即购买逻辑
+  const cartItem = {
+    id: item.value.id,
+    name: item.value.name,
+    cover: item.value.cover,
+    price: countPrice.value,
+    count: count.value,
+    skus: selectedSkuOptions.value
+  }
+  submitOrder(orderType.value, pickUpType.value, [cartItem])
+  
 }
 </script>
 

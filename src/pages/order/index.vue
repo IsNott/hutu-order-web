@@ -1,6 +1,6 @@
 <template>
   <view class="body">
-    <view class="header box">
+    <!-- <view class="header box">
       <view class="left-info">
         <view class="title" @click="handleClickShopInfo">
           <view class="shop-name">{{ currentShop?.shopName }}</view>
@@ -15,7 +15,8 @@
           <view class="btn" :class="{ 'active': pickUpType === 1 }" @click="pickUpType = 1">外带</view>
         </view>
       </view>
-    </view>
+    </view> -->
+    <shop-card class="shop-card box" :pickUpType="pickUpType" @changePickUpType="changePickUpType" />
     <view class="content box">
       <scroll-view class="catalog-list" scroll-y>
         <view v-for="catalog in sideCatalogs" class="catalog-item" :class="{ 'active': activeCatalog === catalog.id }"
@@ -45,17 +46,18 @@
         <no-more />
       </scroll-view>
     </view>
-    <view v-if="cart.length > 0" class="cart-box" @click="toggleCartDetail">
-      <view class="cart-icon">
+    <view v-if="cart.length > 0" class="cart-box">
+      <view class="cart-icon" @click="toggleCartDetail">
         <uni-icons type="cart" size="24" color="#fff"></uni-icons>
         <view v-if="totalQuantity > 0" class="cart-badge">{{ totalQuantity }}</view>
       </view>
-      <view class="cart-info">
+      <view class="cart-info" @click="toggleCartDetail">
         <view class="cart-total">¥{{ totalPrice }}</view>
         <view class="cart-desc">已选{{ totalQuantity }}件商品</view>
       </view>
       <view class="cart-action">
-        <view class="checkout-btn">去结算</view>
+        <view class="checkout-btn" @click="handleSubmit">去结算</view>
+        <!-- <button class="checkout-btn" @click="handleSubmit">去结算</button> -->
       </view>
     </view>
     <view class="cart-mask" v-if="showCartDetail && cart.length > 0" @click="toggleCartDetail"></view>
@@ -87,11 +89,11 @@
           </view>
           <view class="cart-item-actions">
             <button class="cart-item-btn minus" @click.stop="decreaseQuantity(item)">
-              <uni-icons type="back" size="16" color="#007AFF"></uni-icons>
+              <uni-icons type="back" size="16" color="#8B7355"></uni-icons>
             </button>
             <view class="cart-item-count">{{ item.count }}</view>
             <button class="cart-item-btn plus" @click.stop="increaseQuantity(item)">
-              <uni-icons type="forward" size="16" color="#007AFF"></uni-icons>
+              <uni-icons type="forward" size="16" color="#8B7355"></uni-icons>
             </button>
           </view>
         </view>
@@ -106,10 +108,12 @@ import { commonNavigate, formatDistance } from '@/utils/CommonUtils'
 import { orderAPI } from './api'
 import noMore from '@/component/NoMore.vue'
 import { onLoad } from '@dcloudio/uni-app'
+import ShopCard from '@/component/ShopCard.vue'
+
 // Data
 const orderType = ref('now')
 const currentShop = ref(null)
-const pickUpType = ref(0)
+const pickUpType = ref('0')
 const catalogs = ref([])
 const menus = ref([])
 const activeCatalog = ref(1)
@@ -175,6 +179,7 @@ const getCurrentShop = () => {
 const getMyPackage = () => {
   orderAPI.queryMyPackage().then(res => {
     console.log('getMyPackage:' , res);
+    console.log('getMyPackage:' , JSON.stringify(res.data));
     cart.value = res.data
   })
 }
@@ -204,6 +209,10 @@ const getCatalogAndMenu = async () => {
 
 const getMenusByCatalog = (catalogId) => {
   return menus.value.filter(menu => menu.catalogId === catalogId)
+}
+
+const changePickUpType = (type) => {
+  pickUpType.value = type
 }
 
 const handleClickCatalog = (catalog) => {
@@ -279,7 +288,7 @@ const addToCart = (menu) => {
 }
 
 const goToDetail = (item) => {
-  commonNavigate('/pages/item-detail/index?id=' + item.id)
+  commonNavigate('/pages/item-detail/index?id=' + item.id + '&orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
 }
 
 const showSelectRadio = () => { 
@@ -312,6 +321,25 @@ const clearCart = () => {
 
 const toggleCartDetail = () => {
   showCartDetail.value = !showCartDetail.value
+}
+
+const handleSubmit = () => {
+  if(cart.value.length == 0){
+    uni.showToast({
+      title: '请选择商品',
+      icon: 'none'
+    })
+    return
+  }
+  submitOrder(orderType.value, pickUpType.value, cart.value)
+  // const userInfo = uni.getStorageSync('user_info')
+  // console.log('userInfo:', userInfo);
+  // if(!userInfo){
+  //   commonNavigate('/pages/authority/index?to=/pages/confirm-order/index?orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
+  //   return
+  // }
+  // uni.$emit('cart-submit', cart.value)
+  // commonNavigate('/pages/confirm-order/index?orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
 }
 </script>
 
@@ -389,7 +417,7 @@ const toggleCartDetail = () => {
   display: flex;
   flex-direction: row;
   border-radius: 50rpx;
-  border: 1px solid #007AFF;
+  border: 1px solid #8B7355;
   overflow: hidden;
   background-color: #fff;
   box-shadow: 0 2px 6px rgba(17, 57, 238, 0.2);
@@ -399,12 +427,12 @@ const toggleCartDetail = () => {
   font-size: 26rpx;
   padding: 16rpx 40rpx;
   text-align: center;
-  color: #007AFF;
+  color: #8B7355;
   background-color: #fff;
   transition: all 0.3s ease;
 
   &.active {
-    background-color: #007AFF;
+    background-color: #8B7355;
     color: #fff;
     font-weight: bold;
   }
@@ -429,9 +457,9 @@ const toggleCartDetail = () => {
 
     &.active {
       background-color: #ffffff;
-      color: #007AFF;
+      color: #8B7355;
       font-weight: bold;
-      border-left-color: #007AFF;
+      border-left-color: #8B7355;
     }
   }
 }
@@ -502,7 +530,7 @@ const toggleCartDetail = () => {
       width: 60rpx;
       height: 60rpx;
       border-radius: 50%;
-      background-color: #007AFF;
+      background-color: #8B7355;
       color: #ffffff;
       display: flex;
       align-items: center;
@@ -512,7 +540,7 @@ const toggleCartDetail = () => {
       font-weight: bold;
 
       &:active {
-        background-color: #0056cc;
+        background-color: #c9a375;
         transform: scale(0.95);
       }
     }
@@ -526,19 +554,19 @@ const toggleCartDetail = () => {
   left: 0rpx;
   right: 0rpx;
   height: 100rpx;
-  background: #333;
+  background: #ffffff;
   display: flex;
   align-items: center;
   padding: 0 30rpx;
   z-index: 200;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -2px 10px rgba(109, 108, 108, 0.1);
 }
 
 .cart-icon {
   position: relative;
   width: 80rpx;
   height: 80rpx;
-  background: #007AFF;
+  background: #8B7355;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -564,7 +592,7 @@ const toggleCartDetail = () => {
 
 .cart-info {
   flex: 1;
-  color: white;
+  color: rgb(107, 100, 100);
 }
 
 .cart-total {
@@ -583,7 +611,7 @@ const toggleCartDetail = () => {
 }
 
 .checkout-btn {
-  background: #007AFF;
+  background: #8B7355;
   color: white;
   padding: 20rpx 40rpx;
   border-radius: 50rpx;
@@ -691,12 +719,12 @@ const toggleCartDetail = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid #007AFF;
+  border: 2rpx solid #8B7355;
   background: white;
 
   &.minus,
   &.plus {
-    border-color: #007AFF;
+    border-color: #8B7355;
   }
 
   &.delete {

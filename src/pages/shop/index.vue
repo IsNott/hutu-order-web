@@ -162,7 +162,7 @@ const generateMarkers = () => {
     callout: {
       content: selectedShopId.value === null ? '我的位置' : '选中门店',
       color: '#ffffff',
-      bgColor: '#007AFF',
+      bgColor: '#8B7355',
       padding: 5,
       borderRadius: 3,
       display: ''
@@ -348,12 +348,12 @@ const goToOrder = (shop) => {
   }
 
   &.shop-info-item--active {
-    background-color: #e6f3ff;
-    border-color: #007AFF;
-    box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.15);
+    background-color: #f8f4f0;
+    border-color: #8B7355;
+    box-shadow: 0 4rpx 12rpx rgba(139, 115, 85, 0.15);
 
     .shop-info-item-info-name {
-      color: #007AFF;
+      color: #8B7355;
     }
 
     .shop-info-item-info-address {
@@ -361,7 +361,7 @@ const goToOrder = (shop) => {
     }
 
     .shop-distance {
-      background: #007AFF;
+      background: #8B7355;
       color: white;
     }
   }
@@ -369,8 +369,9 @@ const goToOrder = (shop) => {
 
 .shop-confirm{
   font-size: 13px;
-    padding: 0 16rpx;
-    font-weight: 600;
+  padding: 0 16rpx;
+  font-weight: 600;
+  // color: #8B7355;
 }
 
 .shop-info-item-info {
@@ -414,6 +415,10 @@ const goToOrder = (shop) => {
     &::placeholder {
       color: #999;
     }
+
+    &:focus {
+    border: 2rpx solid #8B7355;
+  }
   }
 
   .search-icon {
@@ -435,8 +440,9 @@ const goToOrder = (shop) => {
 
 .shop-distance {
   font-size: 24rpx;
-  color: #007AFF;
-  background: #e6f3ff;
+  color: #8B7355;
+  background: #f8f4f0;
+  border: 1rpx solid #e8d5c4;
   padding: 8rpx 16rpx;
   border-radius: 20rpx;
   white-space: nowrap;
@@ -491,16 +497,18 @@ const goToOrder = (shop) => {
   width: 60rpx;
   height: 60rpx;
   border-radius: 50%;
-  background: #f8f8f8;
+  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(139, 115, 85, 0.2);
   z-index: 3;
   transition: all 0.2s ease;
+  border: 2rpx solid #f8f4f0;
 
   &:active {
-    background: #e0e0e0;
-    transform: scale(0.95);
+    background: #f8f4f0;
+    border-color: #e8d5c4;
   }
 
   &.location-button-expanded {
@@ -511,11 +519,12 @@ const goToOrder = (shop) => {
 .location-icon {
   width: 32rpx;
   height: 32rpx;
+  filter: invert(39%) sepia(12%) saturate(978%) hue-rotate(351deg) brightness(94%) contrast(89%);
 }
 
 // 选中状态下的定位按钮样式
 .shop-info-item--active .location-button {
-  background: #007AFF;
+  background: #8B7355;
 
   .location-icon {
     filter: brightness(0) invert(1);

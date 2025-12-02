@@ -199,3 +199,13 @@ export function calculateDistance (lat1, lon1, lat2, lon2) {
   const distance = R * c
   return Math.round(distance)
 }
+
+export function submitOrder(orderType = 'now', pickUpType = '0', cart) {
+  const userInfo = uni.getStorageSync('user_info')
+  if(!userInfo){
+    commonNavigate('/pages/authority/index?to=/pages/confirm-order/index?orderType=' + orderType + '&pickUpType=' + pickUpType)
+    return
+  }
+  uni.$emit('cart-submit', cart)
+  commonNavigate('/pages/confirm-order/index?orderType=' + orderType + '&pickUpType=' + pickUpType)
+}

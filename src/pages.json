@@ -37,6 +37,12 @@
       }
     },
     {
+      "path": "pages/confirm-order/index",
+      "style": {
+        "navigationBarTitleText": "确认订单"
+      }
+    },
+    {
       "path": "pages/item-detail/index",
       "style": {
         "navigationBarTitleText": ""

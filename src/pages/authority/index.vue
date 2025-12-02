@@ -1,143 +1,199 @@
 <template>
-	<view class="body">
-		<view class="context">
-			<image src="@/static/image/coffee.png" mode="aspectFit" />
-			<view class="auth-button">
-				<button size="default" :disabled="bottonDisable" open-type="getPhoneNumber" @getphonenumber="handleUserInfo"
-					type="primary">
-					微信授权登录</button>
-					<button size="default" @click="toAccountLog"
-						type="default">
-						手机号登录</button>
-			</view>
-			<radio-group class="radio-box">
-				<radio style="vertical-align: 3px" value="1" @click="handleChange" :checked="select" />
-				我已阅读并同意
-				<text class="private">《隐私协议》</text> 和
-				<text class="private">《用户协议》</text>
-			</radio-group>
-		</view>
-		<view class="footer">
-			<text v-if="false" @click="handlerClick">免登录点单</text>
-			
-		</view>
-	</view>
+  <view class="page">
+    <view class="img-box">
+      <image class="img" src="@/static/image/coffee.png" mode="aspectFit" />
+    </view>
+    <view class="btn-box">
+      <button class="auth-btn" size="default" :disabled="!clickRadio" open-type="getPhoneNumber" @getphonenumber="handleAuthWxInfo"
+        type="primary">微信授权登录</button>
+      <view class="click-radio" @click="clickRadio = !clickRadio">
+        <radio :checked="clickRadio" color="#8B7355" />
+        <text class="radio-text">我同意使用微信授权信息进行点单操作</text>
+      </view>
+      <view @click="handleNotLogin" class="not-login">
+        <text>暂不登录，直接点单</text>
+        <uni-icons type="right" color="#999" size="16" />
+      </view>
+    </view>
+  </view>
 </template>
 
-<script>
-	import { loginByPhoneInfo } from '@/api/wechat';
-	import { storeUserInfo, commonNavigate } from '@/utils/CommonUtils';
-	export default {
-		name: 'Authority',
-		data() {
-			return {
-				select: false,
-				phoneInfo: ''
-			}
-		},
-		methods: {
-			handleChange() {
-				var select = this.select;
-				this.select = !select;
-			},
-			handlerClick() {
-				this.returnOrderPage();
-			},
-			returnOrderPage(){
-				uni.switchTab({
-					url: '/pages/order/index'
-				});
-			},
-			toAccountLog(){
-				commonNavigate('/pages/authority/account-log/account-log')
-			},
-			handleUserInfo(info) {
-				// console.log('Wx UserInfo callBack: ', info)
-				const detail = info.detail;
-				if(detail.errMsg === 'getPhoneNumber:ok'){
-					this.phoneInfo = info;
-					loginByPhoneInfo(info.detail).then(res=>{
-						storeUserInfo(res.data)
-						this.returnOrderPage();
-					})
-				} else{
-					console.log('用户取消授权')
-				}
-			}
-		},
-		computed: {
-			bottonDisable() {
-				return !this.select;
-			}
-		}
-	}
+<script setup>
+import { onLoad } from '@dcloudio/uni-app'
+import { ref, reactive, onMounted, defineProps, defineEmits, watch, computed } from 'vue'
+import { commonNavigate, storeUserInfo } from '@/utils/CommonUtils'
+import { AuthAPI } from './api'
+// Data
+const callBack = ref(null)
+const clickRadio = ref(false)
+// Computed
+
+// Emits
+const emit = defineEmits([
+
+])
+
+// Props
+const props = defineProps({
+
+})
+
+// Lifecycle hooks
+onMounted(() => {
+  
+})
+onLoad((options) => {
+  callBack.value = options.to
+  console.log('callBack', callBack.value);
+  
+})
+
+// Watchers
+
+// Methods
+const handleAuthWxInfo = (info) => {
+  const detail = info.detail;
+  if (detail.errMsg === 'getPhoneNumber:ok') {
+    AuthAPI.loginByPhone(detail).then(res => {
+      storeUserInfo(res.data)
+      navigateCallBack()
+    })
+  }
+}
+
+const navigateCallBack = () => {
+  console.log(callBack.value);
+  if (callBack.value) commonNavigate(callBack.value)
+  else uni.navigateBack({ delta: 0, animationType: 'slide-out-right' })
+}
+
+const handleNotLogin = () => {
+  const data = {
+    userInfo: {
+      nickName: '游客',
+      avatarUrl: '@/static/image/default-avatar.png',
+      isTourist: true
+    },
+  }
+  storeUserInfo(data)
+  navigateCallBack()
+}
 </script>
 
-<style scoped>
-	.body {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-	}
+<style scoped lang="scss">
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8F4F0 100%);
+  padding: 40rpx;
+  box-sizing: border-box;
+}
 
-	.context {
-		margin: 0px;
-		display: flex;
+.img-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-height: 60vh;
+  
+  .img {
+    width: 300rpx;
+    height: 300rpx;
+    animation: float 3s ease-in-out infinite;
+  }
+}
 
-		flex-direction: column;
-		flex: 1;
-		/* 让 body 部分占据剩余的空间 */
-		display: flex;
-		justify-content: center;
-		/* 在 body 中水平居中 */
-		align-items: center;
-		/* 在 body 中垂直居中 */
-	}
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20rpx);
+  }
+}
 
-	.auth-button {
-		margin: 14px 0px;
-		margin-top: 40px;
-		text-align: center;
-		width: 80%;
-	}
+.btn-box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  margin-bottom: 10vh;
+  gap: 30rpx;
+  
+  .auth-btn {
+    width: 100%;
+    height: 90rpx;
+    line-height: 90rpx;
+    border-radius: 45rpx;
+    background: linear-gradient(135deg, #8B7355 0%, #A58C6D 100%);
+    color: white;
+    font-size: 32rpx;
+    font-weight: bold;
+    border: none;
+    box-shadow: 0 8rpx 24rpx rgba(139, 115, 85, 0.3);
+    
+    &[disabled] {
+      background: #E0D8CF;
+      color: #B5A997;
+      box-shadow: none;
+    }
+    
+    &:not([disabled]):active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+  }
+  
+  .click-radio {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    padding: 10rpx;
+    
+    .radio-text {
+      font-size: 26rpx;
+      color: #666;
+    }
+    
+    &:active {
+      opacity: 0.8;
+    }
+  }
+  
+  .not-login {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    padding: 20rpx;
+    
+    text {
+      font-size: 24rpx;
+      color: #999;
+    }
+    
+    &:active {
+      opacity: 0.7;
+    }
+  }
+}
 
-	.auth-button button {
-		padding: 0px 16px;
-		border-radius: 14px;
-		margin: 10px;
-	}
-
-	.auth-button text {
-		padding: 0px 20px;
-	}
-
-	.context image {
-		margin: auto;
-		margin-top: 200px;
-	}
-	
-	.radio-box{
-		margin: 0px 70px;
-		text-align: center;
-	}
-
-	.footer {
-		height: 20%;
-		bottom: 0;
-		margin-top: 80px;
-		text-align: center;
-	}
-
-	.footer text {
-		color: gray;
-	}
-
-	radio {
-		font-size: 8px;
-		transform: scale(0.77);
-	}
-
-	.private {
-		color: #d37959;
-	}
+:deep(.uni-radio-input) {
+  width: 32rpx !important;
+  height: 32rpx !important;
+  border-radius: 50% !important;
+  
+  &.uni-radio-input-checked {
+    background-color: #8B7355 !important;
+    border-color: #8B7355 !important;
+    
+    &::before {
+      font-size: 20rpx !important;
+    }
+  }
+}
 </style>
