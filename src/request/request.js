@@ -71,17 +71,17 @@ function handleRequest(api, method, data, resolve, reject, custHeader) {
 		timeout: TIME_OUT,
 		success: (response) => {
 			if(response.statusCode != 200){
-				console.error("Request error: ", response)
+				console.error("Request error0: ", response)
 				uni.showToast({
 					icon: 'error',
 					position: 'top',
-					title: '请求失败'
+					title: '网络错误'
 				})
 				return reject(res)
 			}
 			const res = response.data
-			if(!res.code){
-				console.error("Request error: ", res)
+			if(!res || !res.code){
+				console.error("Request error1: ", res)
 				uni.showToast({
 					icon: 'error',
 					position: 'top',
@@ -90,10 +90,11 @@ function handleRequest(api, method, data, resolve, reject, custHeader) {
 				return reject(res)
 			}
 			if (res.code == 401) {
+        console.error("Request error2: ", res)
 				uni.showToast({
 					icon: 'error',
 					position: 'top',
-					title: '请重新登录'
+					title: '暂无登录信息，请重新登录'
 				});
 				var pages = getCurrentPages()
 				var page = pages[pages.length - 1]
@@ -105,18 +106,18 @@ function handleRequest(api, method, data, resolve, reject, custHeader) {
 				return reject(res)
 			}
 			if (res.code != 200) {
-				console.error("Request error: ", res.message)
+				console.error("Request error3: ", res.message)
 				uni.showToast({
 					icon: 'error',
 					position: 'top',
-					title: '请求失败'
+					title: '业务处理失败'
 				})
 				return reject(res)
 			}
 			return resolve(res)
 		},
 		fail: (err) => {
-			console.log('error', err)
+			console.log('Request fail', err)
 			uni.showToast({
 				icon: 'error',
 				position: 'top',
@@ -266,6 +267,6 @@ function preHandle() {
 }
 
 function storeTokenInfo(info) {
-	uni.setStorageSync('user_info', info)
+	uni.setStorageSync('USER_INFO', info)
 	uni.setStorageSync('token', info.token)
 }

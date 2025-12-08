@@ -1,72 +1,70 @@
 <template>
-	<view>
-		<uni-list>
-			<uni-list-item showArrow title="退出登录" :clickable="true" @click="handleLogout" />
-			<uni-list-item showArrow title="清除缓存" :clickable="true" @click="handleClearCache" />
-		</uni-list>
-	</view>
+  <view class="context">
+    <view class="feature-section">
+      <feature-item title="退出登录" @toggle="handleLogout" />
+    </view>
+  </view>
 </template>
 
-<script>
-	import {
-		logout
-	} from '@/api/setting'
-	import {
-		commonNavigate,
-		getStoreUserInfo
-	} from '@/utils/CommonUtils'
-	export default {
-		name: 'Setting',
-		data() {
-			return {}
-		},
-		methods: {
-			handleLogout() {
-				const info = getStoreUserInfo()
-				if (!info) {
-					uni.showToast({
-						icon: 'error',
-						title: '您还未登录'
-					})
-					setTimeout(() => uni.hideToast(), 1500)
-				} else {
-					uni.showModal({
-						content: '确认退出登录？',
-						success(res) {
-							if (res.confirm) {
-								uni.removeStorageSync('user_info')
-								uni.removeStorageSync('CURRENT_SHOP')
-								logout().then(res => {
-									uni.showToast({
-										icon: 'success',
-										title: '退出成功'
-									})
-									commonNavigate('/pages/home/index')
-								}).finally(uni.hideToast())
-							}
-						}
-					})
-				}
-			},
-			handleClearCache() {
-				uni.showModal({
-					content: '清除后需要重新选择门店进行点单，是否继续？',
-					success(res) {
-						if (res.confirm) {
-							uni.removeStorageSync('CURRENT_SHOP')
-							uni.showToast({
-								icon: 'success',
-								title: '清除成功'
-							})
-							setTimeout(() => uni.hideToast(), 1500)
-						}
-					}
-				})
-			}
-		},
-	}
+<script setup>
+import { ref, reactive, onMounted, defineProps, defineEmits, watch, computed } from 'vue'
+import FeatureItem from '@/component/FeatureItem.vue'
+// Data
+
+// Computed
+
+// Emits
+const emit = defineEmits([
+
+])
+
+// Props
+const props = defineProps({
+
+})
+
+// Lifecycle hooks
+onMounted(() => {
+
+})
+
+// Watchers
+
+// Methods
+const handleLogout = () => {
+  const info = getStoreUserInfo()
+  if (!info) {
+    uni.showToast({
+      icon: 'error',
+      title: '您还未登录'
+    })
+    setTimeout(() => uni.hideToast(), 1500)
+  } else {
+    uni.showModal({
+      content: '确认退出登录？',
+      success(res) {
+        if (res.confirm) {
+          uni.removeStorageSync('USER_INFO')
+          uni.removeStorageSync('CURRENT_SHOP')
+          logout().then(res => {
+            uni.showToast({
+              icon: 'success',
+              title: '退出成功'
+            })
+            commonNavigate('/pages/home/index')
+          }).finally(uni.hideToast())
+        }
+      }
+    })
+  }
+}
 </script>
 
-<style scoped>
-
-</style>
+<style scoped lang="scss">
+.feature-section {
+  padding: 30rpx;
+  // background: #fafafa;
+  margin-top: 20rpx;
+  border-radius: 20rpx 20rpx 0 0;
+}
+  </style>

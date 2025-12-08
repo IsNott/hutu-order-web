@@ -19,12 +19,12 @@
       <uni-icons type="right" size="16" color="white"></uni-icons>
     </view>
     <view class="offer">
-      <view class="offer-item" @click="clickOfferItem('now')">
+      <view class="offer-item" @click="clickOfferItem(OrderType.NOW)">
         <view class="offer-item-desc">立即下单</view>
         <view class="offer-item-title">Order Now</view>
       </view>
       <view class="divider"></view>
-      <view class="offer-item" @click="clickOfferItem('schedule')">
+      <view class="offer-item" @click="clickOfferItem(OrderType.SCHEDULE)">
         <view class="offer-item-desc">预约点单</view>
         <view class="offer-item-title">Schedule</view>
       </view>
@@ -62,6 +62,7 @@ import { config } from '@/config/index'
 import { HomeAPI } from '@/pages/home/api'
 import { commonNavigate, calculateDistance } from '@/utils/CommonUtils'
 import { staticLatAndLongitude } from '@/mock'
+import { OrderType } from '@/enums/HutuEnums'
 import noMore from '@/component/NoMore.vue'
 const playImages = ref([])
 const playActImages = ref([])
@@ -110,7 +111,8 @@ onMounted(() => {
 
 // Methods
 const clickOfferItem = (type) => {
-  commonNavigate('/pages/order/index?orderType=' + type)
+  uni.setStorageSync('ORDER_TYPE', type)
+  commonNavigate('/pages/order/index')
 }
 
 const getImage = () => {

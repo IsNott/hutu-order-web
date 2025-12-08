@@ -1,297 +1,381 @@
 <template>
-	<scroll-view class="body">
-		<view class="top">
-			<uni-notice-bar v-if="noticeMsg" color="#2979FF" background-color="#EAF2FF" show-icon scrollable
-				:text="noticeMsg" />
-			<!-- </uni-section> -->
-			<uni-steps class="order-steps" :options="eventList" :active="2" active-color="#15c460" />
-			<view v-if="orderVo" class="order-no-view">
-				<text class="order-no-text">
-					取餐号
-				</text>
-				<text class="order-no">
-					{{orderVo.shopOrderNo}}
-				</text>
-				<view class="queue-view" v-if="orderVo.orderStatus == 2">
-					前面还有 {{frontOrderCount}} 单，预计还需等待 {{leftTime}} 分钟
-				</view>
-				<view class="queue-view" v-else>
-					订单已完成
-				</view>
-			</view>
+  <view class="body">
+    <view class="header box">
+      <view class="order-box">
+        <view class="order-no-text">
+          取餐号
+        </view>
+        <view class="order-no">
+          {{ order.shopOrderNo }}
+        </view>
+        <view class="order-status" v-if="order.orderStatus == 2">
+          前面还有 {{ order.frontOrderCount }} 单，预计需等待 {{ leftTime }} 分钟
+        </view>
+        <view class="order-status" v-if="order.orderStatus == 4">
+          订单已完成
+        </view>
+      </view>
+      <uni-steps class="order-steps" :options="events" :active="2" active-color="#8B7355" />
+    </view>
+    <view class="content box">
+      <view class="order-info-title">
+        订单信息
+      </view>
+      <view class="order-detail">
+        <view class="order-detail-item">流水号: {{ order.orderId }}</view>
+        <view class="order-detail-item">实付: ¥{{ order.totalAmount }}</view>
+        <view class="order-detail-item">支付时间: {{ order.payTime }}</view>
+        <view class="order-detail-item">门店: {{ order.shopName }}</view>
+        <view class="order-detail-item">门店地址: {{ order.shopAddress }}</view>
+      </view>
+      <view class="btn-group">
+        <button class="btn continue-btn" @click="commonNavigate('/pages/order/index')">
+          继续下单
+        </button>
+        <button class="btn home-btn" @click="commonNavigate('/pages/home/index')">
+          返回首页
+        </button>
+      </view>
+    </view>
 
-		</view>
-		<view v-if="orderVo" class="middle">
-			<view class="pay-info-title">
-				<text>订单信息</text>
-			</view>
-			<divide />
-			<view class="order-text-info">
-				<view class="middle-left">
-					<text class="pay-info">
-						实付：
-					</text><text class="pay-info">
-						原价：
-					</text>
-					<text class="pay-info">
-						减免：
-					</text>
-					<text class="pay-info">
-						流水号：
-					</text>
-					<text v-if="orderVo.settleTime" class="pay-info">
-						支付时间：
-					</text>
-					<text class="pay-info">
-						订单门店：
-					</text>
-					<text class="pay-info">
-						门店地址：
-					</text>
-				</view>
-				<view class="middle-right">
-					<text class="pay-info">
-						￥{{orderVo.totalAmount}}
-					</text>
-					<text class="pay-info">
-						￥{{orderVo.originAmount}}
-					</text>
-					<text class="pay-info" style="text-decoration: line-through">
-						￥{{handleAmountDiff()}}
-					</text>
-					<text class="pay-info">
-						{{orderVo.payOrderId}}
-					</text>
-					<text v-if="orderVo.settleTime" class="pay-info">
-						{{orderVo.settleTime}}
-					</text>
-					<text class="pay-info">
-						<uni-icons type="phone-filled" size="16" style="margin-right: 6px;" />
-						{{orderVo.shopName}}
-					</text>
-					<text class="pay-info">
-						<uni-icons type="location" size="16" style="margin-right: 6px;" />
-						{{orderVo.shopAddress}}
-					</text>
-				</view>
-			</view>
-			<view class="btn-group">
-				<button size="mini" type="primary" @click="handleClick('/pages/order/index')">
-					再来一单
-				</button>
-				<button size="mini" type="default" @click="handleClick('/pages/home/index')">
-					返回首页
-				</button>
-			</view>
-		</view>
-
-		<view class="bottom">
-			<view class="pay-info-title">
-				<text>商品列表</text>
-			</view>
-			<uni-list v-if="orderVo.itemInfo">
-				<uni-list-item :key="item.itemId" v-for="item in orderVo.itemInfo" :border="false" :title="item.itemName"
-					:note="handleSubContent(item)" :thumb="handleImgUrl(item.itemImageUrls)" thumb-size="lg"
-					:rightText="handleAmount(item)" />
-			</uni-list>
-		</view>
-	</scroll-view>
+    <view class="footer box">
+      <view class="item-info-title">
+        商品列表
+      </view>
+      <cart-item-card :item-info="order.itemInfo" />
+    </view>
+  </view>
 </template>
 
-<script>
-	const events = [{
-		title: '挑选商品'
-	}, {
-		title: '支付订单'
-	}, {
-		title: '等待取餐'
-	}]
-	import dayjs from 'dayjs'
-	import {
-		queryOrderById,
-		orderFront
-	} from '@/api/settled'
-	import {
-		handleImageUrl,
-		commonNavigate
-	} from '@/utils/CommonUtils'
-	import Divide from '@/component/Divide.vue'
-	export default {
-		name: 'Settled',
-		components: {
-			Divide
-		},
-		data() {
-			return {
-				orderId: '',
-				orderVo: '',
-				eventList: events,
-				totalWaitTime: 0,
-				frontOrderInfo: '',
-				frontOrderCount: 0,
-				noticeMsg: '请您留意取餐号及店员当前叫到的号数，为不影响口感请及时取餐，用餐过程中有问题可咨询店员，感谢您光临糊涂餐馆！'
-			}
-		},
-		onLoad: function(opt) {
-			this.orderId = opt.orderId
-			this.queryOrderById()
-			this.queryFrontOrder()
-		},
-		methods: {
-			queryOrderById() {
-				if (this.orderId) {
-					queryOrderById(this.orderId).then(res => {
-						this.orderVo = res.data
-						if (this.orderVo && this.orderVo.waitTime) {
-							this.totalWaitTime += this.orderVo.waitTime
-						}
-					})
-				}
-			},
-			queryFrontOrder() {
-				if (this.orderId && this.orderVo.orderStatus == 2) {
-					orderFront(this.orderId).then(res => {
-						if (res.data) {
-							this.frontOrderInfo = res.data
-							if (this.frontOrderInfo.orderCount) {
-								this.frontOrderCount = this.frontOrderInfo.orderCount
-							}
-							if (this.frontOrderInfo.waitTime) {
-								this.totalWaitTime += this.frontOrderInfo.waitTime
-							}
-						}
-					})
-				}
-			},
-			handleImgUrl(url) {
-				return handleImageUrl(url)
-			},
-			handleSubContent(item) {
-				var piece = 'X ' + item.itemPiece
-				return piece + '  ' + item.skuItemContents
-			},
-			handleAmount(item) {
-				var symbol = '原价: ￥'
-				return symbol + item.singleActuallyAmount
-			},
-			handleAmountDiff() {
-				const order = this.orderVo
-				return order.originAmount - order.totalAmount
-			},
-			handleClick(url) {
-				commonNavigate(url)
-			}
-		},
-		computed: {
-			leftTime() {
-				let baseTime = 0
-				this.orderVo.itemInfo.forEach(vo => baseTime += vo.expectMakeTime)
-				var settleTime = this.orderVo.settleTime
-				var dayjsTime = dayjs(settleTime, 'YYYY-MM-DD HH:mm:ss')
-				dayjsTime.add(this.totalWaitTime, 'minute')
-				var now = dayjs()
-				// TODO diff
-				let diff = dayjsTime.diff(now, 'minute')
-				console.log('diff',diff);
-				diff += baseTime
-				return diff >= 0 ? diff : 0
-			}
-		}
-	}
+<script setup>
+import { ref, reactive, onMounted, defineProps, defineEmits, watch, computed } from 'vue'
+import { commonNavigate } from '@/utils/CommonUtils'
+import CartItemCard from '@/component/CartItemCard.vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { confirmOrderAPI } from '@/pages/confirm-order/api/index'
+// Data
+const events = [{
+  title: '挑选商品'
+}, {
+  title: '支付订单'
+}, {
+  title: '等待取餐'
+}]
+const order = ref('')
+const orderId = ref('')
+// Computed
+const leftTime = computed(() => {
+  return order.waitTime
+})
+// Fake data
+const forder = {
+  shopOrderNo: 'H01',
+  orderId: '123456789',
+  payTime: '2021-01-01 12:00:00',
+  totalAmount: 100,
+  waitTime: 10,
+  shopId: 1,
+  orderStatus: 4,
+  shopName: 'Hurry Restaurant',
+  shopAddress: '123 Main St, Anytown, USA',
+  payType: '微信支付',
+  payCode: '5500',
+  frontOrderCount: 1,
+  itemInfo: [
+    {
+      id: 1,
+      name: 'Hutu Coffee',
+      cover: '',
+      price: 11,
+      count: 1,
+      skus: [
+        {
+          label: '微糖',
+          value: '4',
+          parentId: '1'
+        },
+        {
+          label: '去冰',
+          parentId: '2'
+        },
+        {
+          label: '超大杯',
+          value: '3',
+          parentId: '3'
+        },
+        {
+          label: '一份糖浆',
+          value: '3',
+          parentId: '4',
+          addonalPrice: 1
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Hutu Coffee',
+      cover: '',
+      price: 11,
+      count: 1,
+      skus: [
+        {
+          label: '微糖',
+          value: '4',
+          parentId: '1'
+        },
+        {
+          label: '去冰',
+          parentId: '2'
+        },
+        {
+          label: '超大杯',
+          value: '3',
+          parentId: '3'
+        },
+        {
+          label: '一份糖浆',
+          value: '3',
+          parentId: '4',
+          addonalPrice: 1
+        }
+      ]
+    },
+    {
+      id: 3,
+      name: 'Hutu Coffee',
+      cover: '',
+      price: 11,
+      count: 1,
+      skus: [
+        {
+          label: '微糖',
+          value: '4',
+          parentId: '1'
+        },
+        {
+          label: '去冰',
+          parentId: '2'
+        },
+        {
+          label: '超大杯',
+          value: '3',
+          parentId: '3'
+        },
+        {
+          label: '一份糖浆',
+          value: '3',
+          parentId: '4',
+          addonalPrice: 1
+        }
+      ]
+    }
+  ]
+}
+// Emits
+const emit = defineEmits([
+
+])
+
+// Props
+const props = defineProps({
+
+})
+
+// Lifecycle hooks
+onMounted(() => {
+  queryOrder()
+})
+onLoad((opt)=> {
+  orderId.value = opt.orderId
+})
+// Watchers
+
+// Methods
+const queryOrder = () => {
+  confirmOrderAPI.queryOrder(orderId.value).then(res => {
+    order.value = res.data
+  })
+}
 </script>
 
-<style scoped>
-	.body {
-		display: flex;
-		flex-direction: row;
-	}
+<style scoped lang="scss">
+.body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(180deg, #F8F4F0 0%, #FFFFFF 100%);
+  padding: 20rpx;
+  box-sizing: border-box;
+}
 
-	.top {
-		width: 100%;
-		height: 60%;
-	}
+.box {
+  width: 100%;
+  background: white;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  margin-bottom: 20rpx;
+  box-sizing: border-box;
+}
 
-	.order-no-view {
-		text-align: center;
-	}
+.header {
+  padding: 40rpx 30rpx;
+  text-align: center;
+  margin-top: 20rpx;
+  .order-box {
+    margin-bottom: 30rpx;
 
-	.order-no-text {
-		font-size: 16px;
-		display: block;
-		font-weight: 600;
-		padding-top: 40px;
-	}
+    .order-no-text {
+      font-size: 28rpx;
+      color: #666;
+      margin-bottom: 10rpx;
+    }
 
-	.order-no {
-		font-size: 32px;
-		display: block;
-		font-weight: 700;
-		padding: 12px 0px;
-	}
+    .order-no {
+      font-size: 80rpx;
+      font-weight: bold;
+      color: #8B7355;
+      margin-bottom: 20rpx;
+      font-family: Arial, sans-serif;
+    }
 
-	.order-steps {
-		padding-top: 14px;
-	}
+    .order-status {
+      font-size: 26rpx;
+      color: #666;
+      background: #f8f4f0;
+      padding: 12rpx 20rpx;
+      border-radius: 20rpx;
+      display: inline-block;
+      border: 1rpx solid #e8d5c4;
+    }
+  }
 
-	.queue-view {
-		padding: 10px;
-		background-color: #f5f5f5;
-		margin: 0px 30px;
-		border-radius: 25px;
-	}
+  .order-steps {
+    margin-top: 20rpx;
+  }
+}
 
-	.middle {
-		margin: 30px 0px;
-	}
+.content {
+  padding: 40rpx 30rpx;
 
-	.order-text-info {
-		display: flex;
-		font-size: 16px;
-		margin-top: 6px;
-	}
+  .order-info-title {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 30rpx;
+    padding-bottom: 20rpx;
+    border-bottom: 1rpx solid #f0f0f0;
+  }
 
-	.pay-info {
-		display: block;
-		padding: 4px;
-	}
+  .order-detail {
+    margin-bottom: 40rpx;
 
-	.middle-left {
-		width: 35%;
-	}
+    .order-detail-item {
+      font-size: 28rpx;
+      color: #666;
+      padding: 16rpx 0;
+      border-bottom: 1rpx solid #f5f5f5;
+      display: flex;
+      justify-content: space-between;
 
-	.middle-right {
-		width: 65%;
-	}
+      &:last-child {
+        border-bottom: none;
+      }
 
-	.pay-info-title {
-		padding: 10px;
-		font-size: 20px;
-		font-weight: 600;
-	}
+      &:nth-child(2) {
+        font-weight: bold;
+        color: #8B7355;
+      }
+    }
+  }
 
-	.pay-info-row {
-		margin: 8px 0px;
-		text-align: justify;
-	}
+  .btn-group {
+    display: flex;
+    gap: 20rpx;
 
-	.pay-info {
-		margin: 0px 14px;
-	}
+    .btn {
+      flex: 1;
+      height: 80rpx;
+      border-radius: 40rpx;
+      font-size: 30rpx;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
 
-	.pay-info-context {
-		margin: 0px 20px;
-	}
+      &.continue-btn {
+        background: linear-gradient(135deg, #8B7355 0%, #A58C6D 100%);
+        color: white;
+        box-shadow: 0 8rpx 24rpx rgba(139, 115, 85, 0.2);
 
-	.btn-group button {
-		width: 40%;
-		margin: auto;
-		margin: 20px 40px;
-		font-size: 14px;
-	}
+        &:active {
+          opacity: 0.9;
+          transform: scale(0.98);
+        }
+      }
 
-	.btn-group {
-		display: flex;
-		flex-direction: row;
-		justify-content: space-between;
-	}
+      &.home-btn {
+        background: #f8f4f0;
+        color: #8B7355;
+        border: 2rpx solid #e8d5c4;
+
+        &:active {
+          background: #e8d5c4;
+          transform: scale(0.98);
+        }
+      }
+    }
+  }
+}
+
+.footer {
+  padding: 40rpx 30rpx;
+  margin-bottom: 40rpx;
+
+  .item-info-title {
+    font-size: 36rpx;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 30rpx;
+    padding-bottom: 20rpx;
+    border-bottom: 1rpx solid #f0f0f0;
+  }
+}
+
+// 重写uni-steps组件样式
+:deep(.uni-steps) {
+  .uni-steps__items {
+    justify-content: center !important;
+  }
+
+  .uni-steps__item {
+    flex: 0 0 auto !important;
+    margin: 0 40rpx !important;
+
+    &.uni-steps__item--active {
+      .uni-steps__item-title {
+        color: #8B7355 !important;
+      }
+
+      .uni-steps__item-circle {
+        background: #8B7355 !important;
+      }
+    }
+  }
+
+  .uni-steps__item-title {
+    color: #999 !important;
+    font-size: 26rpx !important;
+  }
+
+  .uni-steps__item-circle {
+    width: 16rpx !important;
+    height: 16rpx !important;
+  }
+
+  .uni-steps__item-line {
+    background: #e0e0e0 !important;
+  }
+}
 </style>

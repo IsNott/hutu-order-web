@@ -31,7 +31,7 @@
 
 <script>
 	import { commonNavigate } from '@/utils/CommonUtils'
-	import { OrderStatus } from '@/enums/orderStatusEnum'
+	import { OrderStatus } from '@/enums/HutuEnums'
 import {
 		queryPayWay, gateway
 	} from '@/api/pay'

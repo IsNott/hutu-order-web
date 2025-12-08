@@ -4,6 +4,7 @@ import { HomeAPIResultTemplate } from './template/home.js'
 import { ShopAPIResultTemplate } from './template/shop.js'
 import { ItemDetailAPIResultTemplate } from './template/itemDetail.js'
 import { AuthAPIResultTemplate } from './template/authority.js'
+import { ConfirmOrderAPIResultTemplate } from './template/confirmOrder.js'
 import { commonResp } from './template/'
 const baseUrl = 'http://localhost:9999/hutu-api'
 
@@ -49,4 +50,11 @@ export function mockAPI() {
   Mock.mock(`${baseUrl}/bizPackage/add`, commonResp);
   Mock.mock(`${baseUrl}/bizPackage/queryMyPackage`, ItemDetailAPIResultTemplate.myPackage);
   Mock.mock(`${baseUrl}/auth/loginByPhone`, AuthAPIResultTemplate.userInfo);
+  Mock.mock(`${baseUrl}/api/order/submitBizOrder`, ConfirmOrderAPIResultTemplate.submitBizOrder);
+  Mock.mock(new RegExp(`${baseUrl}/api/order/queryOrder/\\d+`), ConfirmOrderAPIResultTemplate.queryOrder);
+  Mock.mock(new RegExp(`${baseUrl}/bizMenu/queryMySeachHistory/\\d+`), OrderAPIResultTemplate.queryMySeachHistory);
+  Mock.mock(new RegExp(`${baseUrl}/bizMenu/queryRecommendMenu/\\d+`), OrderAPIResultTemplate.queryRecommendMenu);
+  Mock.mock(`${baseUrl}/bizMenu/query`, OrderAPIResultTemplate.getMenu);
+  Mock.mock(`${baseUrl}/bizMenu/saveSearchHistory`, commonResp);
+  Mock.mock(`${baseUrl}/bizMenu/clearSearchHistory`, commonResp);
 }

@@ -44,7 +44,7 @@
 	import MarkTab from './component/MarkTab.vue'
 	import {
 		OrderStatus
-	} from '@/enums/orderStatusEnum'
+	} from '@/enums/HutuEnums'
 	import {
 		removeItemById,
 		updateContext,

@@ -133,5 +133,19 @@ export const OrderAPIResultTemplate = {
       },
     ]
 
+  },
+  queryMySeachHistory:{
+    code: 200,
+    message: '成功',
+    'data': [
+      '茶', '咖啡', '面包', '牛角包', '提拉米苏', '冰淇淋'
+    ]
+  },
+  queryRecommendMenu: {
+    code: 200,
+    message: '成功',
+    'data': [
+      '浮夸', '屋村几座', '九龙新界', '旺角卡门', '观塘一号'
+    ]
   }
 }

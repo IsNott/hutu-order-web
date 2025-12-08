@@ -1,21 +1,14 @@
 <template>
   <view class="body">
-    <!-- <view class="header box">
-      <view class="left-info">
-        <view class="title" @click="handleClickShopInfo">
-          <view class="shop-name">{{ currentShop?.shopName }}</view>
-          <uni-icons type="right" size="14"></uni-icons>
-        </view>
-        <view class="address">{{ currentShop?.address }}</view>
-        <view class="distance" v-if="currentShop?.distance">距离{{ formatDistance(currentShop?.distance) }}</view>
+    <view class="status-bar">
+      <view class="status-left" @click="goSearch()">
+        <uni-icons type="search" size="18" color="gray"/>
+        搜索
       </view>
-      <view class="right-info">
-        <view class="btn-group">
-          <view class="btn" :class="{ 'active': pickUpType === 0 }" @click="pickUpType = 0">堂食</view>
-          <view class="btn" :class="{ 'active': pickUpType === 1 }" @click="pickUpType = 1">外带</view>
-        </view>
+      <view class="status-middle">
+        Hutu-Coffe
       </view>
-    </view> -->
+    </view>
     <shop-card class="shop-card box" :pickUpType="pickUpType" @changePickUpType="changePickUpType" />
     <view class="content box">
       <scroll-view class="catalog-list" scroll-y>
@@ -104,13 +97,14 @@
 
 <script setup>
 import { ref, reactive, onMounted, defineProps, defineEmits, watch, nextTick, computed } from 'vue'
-import { commonNavigate, formatDistance } from '@/utils/CommonUtils'
+import { commonNavigate, submitOrder } from '@/utils/CommonUtils'
 import { orderAPI } from './api'
 import noMore from '@/component/NoMore.vue'
 import { onLoad } from '@dcloudio/uni-app'
 import ShopCard from '@/component/ShopCard.vue'
-
 // Data
+const statusBarHeight = ref(0)
+const systemInfo = ref(null)
 const orderType = ref('now')
 const currentShop = ref(null)
 const pickUpType = ref('0')
@@ -144,6 +138,17 @@ const totalPrice = computed(() => {
   return cart.value.reduce((total, item) => total + (item.price * (item.count || 1)), 0).toFixed(2)
 })
 
+const statusBarTotalHeight = computed(() => {
+  if (!systemInfo.value) return '88rpx'
+  const statusBarHeightPX = systemInfo.value.statusBarHeight || 0
+  const titleBarHeight = 44 // 微信小程序标题栏通常高度
+  const totalHeightPX = statusBarHeightPX + titleBarHeight
+  // 将像素转换为rpx（假设设计稿为750rpx宽度）
+  const screenWidth = systemInfo.value.screenWidth || 375
+  const rpxPerPX = 750 / screenWidth
+  return Math.round(totalHeightPX * rpxPerPX) + 'rpx'
+})
+
 // Emits
 const emit = defineEmits([])
 
@@ -152,12 +157,14 @@ const props = defineProps({})
 
 // Lifecycle hooks
 onMounted(() => {
+  getSystemInfo()
   getCurrentShop()
   getMyPackage()
 })
 
 onLoad((opt) => {
-  orderType.value = opt.orderType
+  orderType.value = uni.getStorageSync('ORDER_TYPE') || 'now'
+  console.log('order.orderType:', orderType.value);
 })
 
 
@@ -172,6 +179,18 @@ watch(() => cart.value, () => {
 })
 
 // Methods
+const getSystemInfo = () => {
+  uni.getSystemInfo({
+    success: (res) => {
+      systemInfo.value = res
+      statusBarHeight.value = res.statusBarHeight || 0
+      console.log('系统信息:', res)
+    },
+    fail: (err) => {
+      console.error('获取系统信息失败:', err)
+    }
+  })
+}
 const getCurrentShop = () => {
   currentShop.value = uni.getStorageSync('CURRENT_SHOP')
 }
@@ -291,6 +310,10 @@ const goToDetail = (item) => {
   commonNavigate('/pages/item-detail/index?id=' + item.id + '&orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
 }
 
+const goSearch = () => { 
+  commonNavigate('/pages/order/component/SearchItem?orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
+}
+
 const showSelectRadio = () => { 
   selectRadio.value = !selectRadio.value
 }
@@ -331,15 +354,9 @@ const handleSubmit = () => {
     })
     return
   }
+  console.log('cart:' , cart.value);
+  console.log('orderType:' , orderType.value)
   submitOrder(orderType.value, pickUpType.value, cart.value)
-  // const userInfo = uni.getStorageSync('user_info')
-  // console.log('userInfo:', userInfo);
-  // if(!userInfo){
-  //   commonNavigate('/pages/authority/index?to=/pages/confirm-order/index?orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
-  //   return
-  // }
-  // uni.$emit('cart-submit', cart.value)
-  // commonNavigate('/pages/confirm-order/index?orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
 }
 </script>
 
@@ -462,6 +479,52 @@ const handleSubmit = () => {
       border-left-color: #8B7355;
     }
   }
+}
+
+.status-bar {
+  height: v-bind(statusBarTotalHeight);
+  width: 100%;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 100;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.status-left {
+  height: 60rpx;
+  line-height: 60rpx;
+  padding: 0 30rpx;
+  background-color: #f5f5f5;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  left: 4%;
+}
+
+.status-middle {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  transform: translate(-50%, -50%);
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.shop-card {
+  margin-top: 0;
 }
 
 .menu-list {

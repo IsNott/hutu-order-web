@@ -15,7 +15,7 @@
                   <view class="price">¥ {{ item.price }}</view>
                 </view>
                 <view class="cart-detail-item-content-right-body">
-                  <view class="sku"> 
+                  <view class="sku">
                     {{ getSkuStr(item) }}
                   </view>
                   <!-- <view class="sku-tags">
@@ -32,7 +32,7 @@
             </view>
           </view>
         </view>
-        
+
         <view class="feature-section">
           <view class="feature-item" @click="toggleCoupon">
             <view class="feature-left">
@@ -40,26 +40,32 @@
               <text class="feature-title">优惠券</text>
             </view>
             <view class="feature-right">
-              <text class="feature-value" :class="{'placeholder': !selectedCopuon}">
+              <text class="feature-value" :class="{ 'placeholder': !selectedCopuon }">
                 {{ selectedCopuon ? selectedCopuon.name : '选择优惠券' }}
               </text>
               <uni-icons type="right" color="#999" size="18" />
             </view>
           </view>
-          
+          <feature-item 
+          title="优惠券" 
+          leftIcon="vip-filled"
+          :active="!selectedCopuon"
+          :activePlaceholder="selectedCopuon ? '' : '选择优惠券'"
+          @toggle="toggleCoupon" />
+
           <view class="feature-item" @click="toggleRemark">
             <view class="feature-left">
               <uni-icons type="chat" color="#8B7355" size="20" />
               <text class="feature-title">备注</text>
             </view>
             <view class="feature-right">
-              <text class="feature-value" :class="{'placeholder': !remark}">
+              <text class="feature-value" :class="{ 'placeholder': !remark }">
                 {{ remark || '填写备注' }}
               </text>
               <uni-icons type="right" color="#999" size="18" />
             </view>
           </view>
-          <view v-if="orderType === 'Schedule'" class="feature-item" @click="toggleExpectArrivalTime">
+          <view v-if="orderType === OrderType.SCHEDULE" class="feature-item" @click="toggleExpectArrivalTime">
             <view class="feature-left">
               <uni-icons type="chat" color="#8B7355" size="20" />
               <text class="feature-title">预计到店</text>
@@ -74,7 +80,7 @@
         </view>
       </scroll-view>
     </view>
-    
+
     <view class="footer">
       <view class="footer-content">
         <view class="total-info">
@@ -91,6 +97,10 @@
 import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { ref, reactive, onMounted, defineProps, defineEmits, watch, computed } from 'vue'
 import ShopCard from '@/component/ShopCard.vue'
+import { OrderType, OrderStatus } from '@/enums/HutuEnums'
+import { commonNavigate } from '@/utils/CommonUtils'
+import { confirmOrderAPI } from '@/pages/confirm-order/api/index'
+import FeatureItem from '@/component/FeatureItem.vue'
 // Data
 const itemInfo = ref([])
 const pickUpType = ref('')
@@ -98,13 +108,17 @@ const currentShop = ref({})
 const orderType = ref('')
 const selectedCopuon = ref('')
 const remark = ref('')
-const expectArrivalTime  = ref('')
+const expectArrivalTime = ref('')
+let payTimeer = null
 // Computed
 const totalPrice = computed(() => {
   let total = 0
-  itemInfo.value.forEach(item => {
-    total += item.price * item.count
-  })
+  console.log(itemInfo.value);
+  if (itemInfo.value) {
+    itemInfo.value.forEach(item => {
+      total += item.price * item.count
+    })
+  }
   return total
 })
 // Fake data
@@ -210,16 +224,14 @@ const props = defineProps({
 // Lifecycle hooks
 onMounted(() => {
   getCurrentShop()
-  // itemInfo.value = [items[0]]
   getItems()
 })
 onLoad((opt) => {
   pickUpType.value = opt.pickUpType
   orderType.value = opt.orderType
-  // itemInfo.value = decodeURIComponent(opt.itemInfo)
 })
 onUnload(() => {
-  uni.$off('cart-submit')
+  clearInterval(payTimeer)
 })
 
 // Watchers
@@ -229,24 +241,67 @@ const getCurrentShop = () => {
   currentShop.value = uni.getStorageSync('CURRENT_SHOP')
 }
 
-const getItems = () => { 
-  uni.$on('cart-submit', (data) => { 
-    console.log('cart-submit',data)
-    itemInfo.value = data.items
-  })
+const getItems = () => {
+  itemInfo.value = uni.getStorageSync('CART-SUBMIT')
 }
 
 const changePickUpType = (type) => {
   pickUpType.value = type
 }
 
-const toggleCoupon = () => { 
+const toggleCoupon = () => {
 }
 
-const toggleRemark = () => { 
+const toggleRemark = () => {
 }
 
-const toggleExpectArrivalTime = () => { 
+const toggleExpectArrivalTime = () => {
+}
+
+const handlePay = async () => {
+  if (!currentShop.value) {
+    uni.showToast({
+      title: '暂无门店，请选择门店',
+      icon: 'none'
+    })
+    return
+  }
+  if (!itemInfo.value || itemInfo.value.length == 0) {
+    uni.showToast({
+      title: '请选择商品',
+      icon: 'none'
+    })
+    return
+  }
+  // 提交订单数据
+  const res = await confirmOrderAPI.submitBizOrder({
+    shopId: currentShop.value.id,
+    orderType: orderType.value,
+    pickUpType: pickUpType.value,
+    remark: remark.value,
+    expectArrivalTime: expectArrivalTime.value,
+    couponId: selectedCopuon.value ? selectedCopuon.value.id : '',
+    items: itemInfo.value,
+    payWay: 'WXPAY',
+    payCode: '5505'
+  })
+  // 调起微信小程序支付
+  uni.showToast({
+    title: '模拟支付中',
+    icon: 'success'
+    , duration: 2000
+  })
+  const orderId = res.data.orderId
+  // 轮询订单状态
+  payTimeer = setInterval(() => {
+    confirmOrderAPI.queryOrder(orderId).then(res => {
+      console.log('queryOrder', res);
+      if (res.data.orderStatus == OrderStatus.PAYED) {
+        clearInterval(payTimeer)
+        commonNavigate('/pages/settled/index?orderId=' + orderId)
+      }
+    })
+  }, 500)
 }
 
 const getSkuStr = (item) => {
@@ -281,6 +336,7 @@ const getSkuStr = (item) => {
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
   overflow: hidden;
   box-sizing: border-box;
+
   .scroll-content {
     height: 100%;
   }
@@ -288,21 +344,21 @@ const getSkuStr = (item) => {
 
 .cart-list {
   padding: 30rpx;
-  
+
   .cart-detail-item {
     padding: 30rpx 0;
     border-bottom: 1rpx solid #f0f0f0;
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     .cart-detail-item-content {
       display: flex;
-      
+
       .cart-detail-item-content-left {
         margin-right: 20rpx;
-        
+
         .item-image {
           width: 120rpx;
           height: 120rpx;
@@ -310,19 +366,19 @@ const getSkuStr = (item) => {
           background-color: #f8f4f0;
         }
       }
-      
+
       .cart-detail-item-content-right {
         flex: 1;
         display: flex;
         flex-direction: column;
         position: relative;
-        
+
         .cart-detail-item-content-right-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
           margin-bottom: 16rpx;
-          
+
           .title {
             font-size: 32rpx;
             font-weight: bold;
@@ -330,7 +386,7 @@ const getSkuStr = (item) => {
             flex: 1;
             margin-right: 20rpx;
           }
-          
+
           .price {
             font-size: 32rpx;
             font-weight: bold;
@@ -338,30 +394,30 @@ const getSkuStr = (item) => {
             white-space: nowrap;
           }
         }
-        
+
         .cart-detail-item-content-right-body {
           margin-bottom: 20rpx;
 
-          .sku{
+          .sku {
             font-size: 24rpx;
             color: #666;
             line-height: 1.5;
             margin-bottom: 12rpx;
             // width: 80%;
           }
-          
+
           .sku-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 12rpx;
-            
+
             .sku-tag {
               font-size: 24rpx;
               color: #666;
               background: #f5f5f5;
               padding: 4rpx 12rpx;
               border-radius: 16rpx;
-              
+
               text {
                 color: #8B7355;
                 font-size: 20rpx;
@@ -370,12 +426,12 @@ const getSkuStr = (item) => {
             }
           }
         }
-        
+
         .cart-detail-item-content-right-footer {
           position: absolute;
           right: 0;
           bottom: 0;
-          
+
           .count {
             font-size: 28rpx;
             color: #333;
@@ -394,33 +450,33 @@ const getSkuStr = (item) => {
   // background: #fafafa;
   margin-top: 20rpx;
   border-radius: 20rpx 20rpx 0 0;
-  
+
   .feature-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 24rpx 0;
     border-bottom: 1rpx solid #f0f0f0;
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     .feature-left {
       display: flex;
       align-items: center;
-      
+
       .feature-title {
         font-size: 28rpx;
         color: #333;
         margin-left: 12rpx;
       }
     }
-    
+
     .feature-right {
       display: flex;
       align-items: center;
-      
+
       .feature-value {
         font-size: 28rpx;
         color: #333;
@@ -429,13 +485,13 @@ const getSkuStr = (item) => {
         text-overflow: ellipsis;
         white-space: nowrap;
         margin-right: 12rpx;
-        
+
         &.placeholder {
           color: #999;
         }
       }
     }
-    
+
     &:active {
       opacity: 0.7;
     }
@@ -451,25 +507,25 @@ const getSkuStr = (item) => {
   padding: 20rpx 30rpx;
   box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.1);
   z-index: 100;
-  
+
   .footer-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+
     .total-info {
       .total-label {
         font-size: 28rpx;
         color: #666;
       }
-      
+
       .total-price {
         font-size: 36rpx;
         font-weight: bold;
         color: #8B7355;
       }
     }
-    
+
     .pay-btn {
       width: 240rpx;
       height: 80rpx;
@@ -482,7 +538,7 @@ const getSkuStr = (item) => {
       font-weight: bold;
       color: white;
       box-shadow: 0 8rpx 24rpx rgba(139, 115, 85, 0.3);
-      
+
       &:active {
         opacity: 0.9;
         transform: scale(0.98);

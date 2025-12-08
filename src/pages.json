@@ -9,7 +9,7 @@
     {
       "path": "pages/order/index",
       "style": {
-        "navigationBarTitleText": "点单"
+        "navigationStyle": "custom"
       }
     },
     {
@@ -18,12 +18,12 @@
         "navigationBarTitleText": "门店列表"
       }
     },
-    // {
-    // 	"path": "pages/search/index",
-    // 	"style": {
-    // 		"navigationBarTitleText": "搜索"
-    // 	}
-    // },
+    {
+    	"path": "pages/order/component/SearchItem",
+    	"style": {
+    		"navigationBarTitleText": "搜索"
+    	}
+    },
     {
       "path": "pages/my/index",
       "style": {

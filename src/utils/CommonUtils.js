@@ -55,7 +55,7 @@ export function getOrderStatus(val) {
 }
 
 export function getStoreUserInfo() {
-	return uni.getStorageSync('user_info')
+	return uni.getStorageSync('USER_INFO')
 }
 
 export function storeUserInfo(info) {
@@ -201,11 +201,11 @@ export function calculateDistance (lat1, lon1, lat2, lon2) {
 }
 
 export function submitOrder(orderType = 'now', pickUpType = '0', cart) {
-  const userInfo = uni.getStorageSync('user_info')
+  const userInfo = uni.getStorageSync('USER_INFO')
+  uni.setStorageSync('CART-SUBMIT', cart)
   if(!userInfo){
     commonNavigate('/pages/authority/index?to=/pages/confirm-order/index?orderType=' + orderType + '&pickUpType=' + pickUpType)
     return
   }
-  uni.$emit('cart-submit', cart)
   commonNavigate('/pages/confirm-order/index?orderType=' + orderType + '&pickUpType=' + pickUpType)
 }
