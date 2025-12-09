@@ -69,11 +69,10 @@ const navigateCallBack = () => {
 
 const handleNotLogin = () => {
   const data = {
-    userInfo: {
       nickName: '游客',
       avatarUrl: '@/static/image/default-avatar.png',
-      isTourist: true
-    },
+      isTourist: true,
+      
   }
   storeUserInfo(data)
   navigateCallBack()

@@ -77,7 +77,7 @@ import { commonNavigate } from '@/utils/CommonUtils'
 import { CacheKey, OrderType, PickUpType } from '@/enums/HutuEnums'
 import { onLoad } from '@dcloudio/uni-app'
 import { orderAPI } from '../api'
-import { NoMore } from '@/components'
+import  NoMore  from '@/component/NoMore'
 // Data
 const keyWord = ref('')
 const searchList = ref([])

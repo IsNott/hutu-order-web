@@ -1,5 +1,5 @@
 export const HomeAPIResultTemplate = {
-  playimage0:  {
+  playimage0: {
     code: 200,
     message: '成功',
     'data|1-2': [{
@@ -28,5 +28,16 @@ export const HomeAPIResultTemplate = {
       type: '2',
       navigation: '/pages/order/index',
     }]
+  },
+  playimage3: {
+    code: 200,
+    message: '成功',
+    'data': [
+      {
+        url: '/static/vip-act.png',
+        title: '会员充值',
+        navigation: ''
+      }
+    ]
   },
 }
