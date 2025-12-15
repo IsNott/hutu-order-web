@@ -60,5 +60,5 @@ export function mockAPI() {
   Mock.mock(`${baseUrl}/bizMenu/saveSearchHistory`, commonResp);
   Mock.mock(`${baseUrl}/bizMenu/clearSearchHistory`, commonResp);
   Mock.mock(`${baseUrl}/api/order/queryMyOrder`, OrderAPIResultTemplate.queryMyOrder);
-  Mock.mock(`${baseUrl}//featureBtn/query`, MyAPIResultTemplate.queryFeatureBtns);
+  Mock.mock(`${baseUrl}/featureBtn/query`, MyAPIResultTemplate.queryFeatureBtns);
 }

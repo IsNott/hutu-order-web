@@ -181,11 +181,15 @@ const getUserInfo = () => {
 }
 
 const getActivity = async() => {
-  activity.value = await myAPI.getPlayImage(3)
+  myAPI.getPlayImage(3).then(res => { 
+    activity.value = res.data
+  })
 }
 
 const getFeature = async() => {
-  featureBtns.value = await myAPI.queryFeatureBtns()
+  myAPI.queryFeatureBtns().then(res => {
+    featureBtns.value = res.data
+  })
 }
 
 const toggleExpand = () => {
