@@ -59,4 +59,5 @@ package-lock.json
 yarn.lock
 
 web/upload
+manifest.json
 
