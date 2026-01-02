@@ -5,6 +5,6 @@ export const HomeAPI = {
     return get(`/playimage/type/${type}`)
   },
   queryShopInfo(data){
-    return post('/shop/info', data)
+    return post('/bizShopInfo/query', data)
   }
 }

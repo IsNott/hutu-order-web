@@ -58,6 +58,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, defineProps, defineEmits, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { config } from '@/config/index'
 import { HomeAPI } from '@/pages/home/api'
 import { commonNavigate, calculateDistance } from '@/utils/CommonUtils'
@@ -106,6 +107,9 @@ onMounted(() => {
   // requestLocationPermission()
   getImage()
   getAct()
+})
+
+onShow(() => {
   getShopInfo()
 })
 

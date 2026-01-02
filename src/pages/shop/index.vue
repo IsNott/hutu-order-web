@@ -16,7 +16,7 @@
       <!-- 搜索框 -->
       <view class="search-box">
         <view class="search-input">
-          <input type="text" placeholder="搜索门店" v-model="searchParam.keyword" class="search-input-field">
+          <input type="text" confirm-type="搜索" placeholder="搜索门店" v-model="searchParam.shopName" class="search-input-field">
           <view class="search-icon" @click="getShopInfo()">搜索</view>
         </view>
       </view>
@@ -63,8 +63,8 @@ const isExpanded = ref(false)
 const startY = ref(0)
 const currentY = ref(0)
 const markers = ref([])
-const searchParam = ref({ ...emptySearchParam })
-const emptySearchParam = { keyword: '' }
+const searchParam = ref({})
+const emptySearchParam = { }
 const selectedShopId = ref(null)
 
 watch(isExpanded, (newValue) => {
@@ -99,6 +99,7 @@ onShow(() => {
 
 // Methods
 const getShopInfo = () => {
+  shopInfos.value = []
   HomeAPI.queryShopInfo(searchParam.value).then(res => {
     shopInfos.value = res.data
     if (shopInfos.value.length > 0) {
