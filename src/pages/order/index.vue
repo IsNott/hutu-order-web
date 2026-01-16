@@ -14,20 +14,20 @@
       <scroll-view class="catalog-list" scroll-y>
         <view v-for="catalog in sideCatalogs" class="catalog-item" :class="{ 'active': activeCatalog === catalog.id }"
           :key="catalog.id" @click="handleClickCatalog(catalog)">
-          {{ catalog.name }}
+          {{ catalog.menuCatalogName }}
         </view>
       </scroll-view>
       <scroll-view class="menu-list" scroll-y @scroll="handleMenuScroll" :scroll-top="menuScrollTop"
         scroll-with-animation :scroll-into-view="scrollIntoView" :show-scrollbar="false">
         <view v-for="catalog in allCatalogs" :key="catalog.id" class="menu-catalog-section"
           :id="'catalog-' + catalog.id">
-          <view class="catalog-title">{{ catalog.name }}</view>
+          <view class="catalog-title">{{ catalog.menuCatalogName }}</view>
           <view v-for="menu in getMenusByCatalog(catalog.id)" :key="menu.id" class="menu-item" @click="goToDetail(menu)">
-            <image class="menu-image" :src="menu.cover" mode="aspectFill"></image>
+            <image class="menu-image" :src="config.baseUrl + menu.coverUrl" mode="aspectFill"></image>
             <view class="menu-item-info">
-              <view class="menu-item-name">{{ menu.name }}</view>
-              <view class="menu-item-desc">{{ menu.description }}</view>
-              <view class="menu-item-price">¥{{ menu.price }}</view>
+              <view class="menu-item-name">{{ menu.itemName }}</view>
+              <view class="menu-item-desc">{{ menu.itemDescription }}</view>
+              <view class="menu-item-price">¥{{ menu.itemPrice }}</view>
             </view>
             <view class="menu-item-action">
               <button class="add-btn" @click="goToDetail(menu)">
@@ -99,6 +99,7 @@
 import { ref, reactive, onMounted, defineProps, defineEmits, watch, nextTick, computed } from 'vue'
 import { commonNavigate, submitOrder } from '@/utils/CommonUtils'
 import { orderAPI } from './api'
+import { config } from '@/config/index'
 import noMore from '@/component/NoMore.vue'
 import { onLoad } from '@dcloudio/uni-app'
 import ShopCard from '@/component/ShopCard.vue'
@@ -159,7 +160,7 @@ const props = defineProps({})
 onMounted(() => {
   getSystemInfo()
   getCurrentShop()
-  getMyPackage()
+  // getMyPackage()
 })
 
 onLoad((opt) => {
@@ -227,7 +228,7 @@ const getCatalogAndMenu = async () => {
 }
 
 const getMenusByCatalog = (catalogId) => {
-  return menus.value.filter(menu => menu.catalogId === catalogId)
+  return menus.value.filter(menu => menu.menuCatalogId === catalogId)
 }
 
 const changePickUpType = (type) => {

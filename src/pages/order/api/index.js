@@ -5,7 +5,7 @@ export const orderAPI = {
     return get(`/bizMenuCatalog/listByShop/${shopId}`)
   },
   getMenuByShop(shopId, catalogId) {
-    return get(`/bizMenu/listByShopCatalogId/${shopId}`)
+    return get(`/bizMenu/listByShopId/${shopId}`)
   },
   
   queryMyPackage(data) {

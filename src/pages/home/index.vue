@@ -4,7 +4,7 @@
       :dots-styles="dotStyle">
       <swiper class="swiper-box" @change="changeBanner" :current="current" :autoplay='true'>
         <swiper-item v-for="(item, index) in playImages" :key="index" @click="clickImage(item)">
-          <image style="width: 100%;" :src="config.baseUrl + item.url" />
+          <image style="width: 100%;" :src="config.baseUrl + item.attachUrl" />
         </swiper-item>
       </swiper>
     </uni-swiper-dot>
@@ -38,7 +38,7 @@
           <swiper class="swiper" @change="changeActBanner" :current="actCurrent" :autoplay='true' next-margin="20rpx">
             <swiper-item class="swiper-item" v-for="(item, index) in playActImages" :key="index"
               @click="clickImage(item)">
-              <image class="act-swiper-image" :src="config.baseUrl + item.url" mode="aspectFill" />
+              <image class="act-swiper-image" :src="config.baseUrl + item.attachUrl" mode="aspectFill" />
             </swiper-item>
           </swiper>
         </uni-swiper-dot>
@@ -48,7 +48,7 @@
     <!-- 活动列表 -->
     <view class="activity-list" v-if="activity.length > 0">
       <view class="activity-info box" :key="index" v-for="act, index in activity">
-        <image class="activity-img" :src="config.baseUrl + act.url" mode="widthFix" />
+        <image class="activity-img" :src="config.baseUrl + act.attachUrl" mode="widthFix" />
       </view>
     </view>
 
@@ -181,8 +181,9 @@ const changeActBanner = (e) => {
 }
 
 const clickImage = (img) => {
-  if (img.navigation) {
-    commonNavigate(img.navigation)
+  // TODO 判断外链
+  if (img.navigateUrl) {
+    commonNavigate(img.navigateUrl)
   }
 }
 // Watchers
