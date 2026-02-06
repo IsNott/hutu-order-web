@@ -158,19 +158,24 @@ const props = defineProps({})
 
 // Lifecycle hooks
 onMounted(() => {
-  getSystemInfo()
-  getCurrentShop()
+  // getSystemInfo()
+  // getCurrentShop()
   // getMyPackage()
 })
 
 onLoad((opt) => {
   orderType.value = uni.getStorageSync('ORDER_TYPE') || 'now'
   console.log('order.orderType:', orderType.value);
+  console.log('onload');
+  getSystemInfo()
+  getCurrentShop()
 })
 
 
 watch(() => currentShop.value, (newValue, oldValue) => {
-  getCatalogAndMenu()
+  if(newValue){
+    getCatalogAndMenu()
+  }
 })
 
 watch(() => cart.value, () => { 
@@ -308,7 +313,7 @@ const addToCart = (menu) => {
 }
 
 const goToDetail = (item) => {
-  commonNavigate('/pages/item-detail/index?id=' + item.id + '&orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
+  commonNavigate('/pages/item-detail/index?id=' + item.itemId + '&orderType=' + orderType.value + '&pickUpType=' + pickUpType.value)
 }
 
 const goSearch = () => { 

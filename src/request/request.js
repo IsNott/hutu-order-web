@@ -55,11 +55,11 @@ function handleRequest(api, method, data, resolve, reject, custHeader) {
 	if (token) {
 		header.token = token
 	}
-	var BASE_URL = 'http://localhost:9999'
+	var BASE_URL = 'http://localhost:10220'
 	if(api.includes('oss')){
 		BASE_URL += '/hutu-oss' 
 	}else{
-		BASE_URL += '/hutu-api'
+		BASE_URL += '/hutu-api/access'
 	}
 	uni.request({
 		url: BASE_URL + api,

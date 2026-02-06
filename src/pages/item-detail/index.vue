@@ -4,7 +4,7 @@
         :dots-styles="dotStyle">
         <swiper class="swiper-box" @change="changeBanner" :current="current" :autoplay='true'>
           <swiper-item v-for="(image, index) in item.images" :key="index">
-            <image class="banner-image" :src="config.baseUrl + image"/>
+            <image class="banner-image" :src="config.baseUrl + image.url"/>
           </swiper-item>
         </swiper>
       </uni-swiper-dot>
@@ -12,8 +12,8 @@
       <view class="content-scroll" >
         <view class="content-title">
           <view class="title-section">
-            <view class="title">{{ item.name }}</view>
-            <view class="price">¥{{ item.price }}</view>
+            <view class="title">{{ item.itemName }}</view>
+            <view class="price">¥{{ item.itemPrice }}</view>
           </view>
         </view>
 
@@ -22,22 +22,22 @@
           <view class="description">{{ item.description }}</view>
         </view>
 
-        <view class="sku-section" v-if="item.skus && item.skus.length > 0">
+        <view class="sku-section" v-if="item.skuSpecs && item.skuSpecs.length > 0">
           <view class="section-title">规格选择</view>
-          <view class="sku-group" v-for="(sku, skuIndex) in item.skus" :key="skuIndex">
-            <view class="sku-label">{{ sku.label }}
+          <view class="sku-group" v-for="(sku, skuIndex) in item.skuSpecs" :key="skuIndex">
+            <view class="sku-label">{{ sku.specLabel }}
               <text v-if="sku.multi">(可多选)</text>
             </view>
             <view class="sku-options">
-              <view class="sku-option" v-for="(option, optionIndex) in sku.options" :key="optionIndex" :class="{
-                'disabled': option.disabled,
+              <view class="sku-option" v-for="(option, optionIndex) in sku.skuOptionList" :key="optionIndex" :class="{
+                'disabled': option.nowDisabled,
                 'selected': isSkuOptionSelected(sku, option)
               }" @click="selectSkuOption(sku, option)">
-                {{ option.label }}
+                {{ option.optionLabel }}
                 <view class="additional-price"
-                  :class="{ 'disabled': option.disabled, 'selected': isSkuOptionSelected(sku, option) }"
-                  v-if="option.addonalPrice != null">
-                  +¥{{ option.addonalPrice ? option.addonalPrice : 0 }}
+                  :class="{ 'disabled': option.nowDisabled, 'selected': isSkuOptionSelected(sku, option) }"
+                  v-if="option.additionalPrice != null && option.additionalPrice > 0">
+                  +¥{{ option.additionalPrice ? option.additionalPrice : 0 }}
                 </view>
               </view>
             </view>
@@ -59,7 +59,7 @@
             </view>
             <view class="selected-options">
               <view class="selected-option" v-for="(option, index) in selectedSkuOptions" :key="index">
-                {{ option.label }}
+                {{ option.optionLabel }}
               </view>
               <view class="no-options" v-if="selectedSkuOptions.length === 0">未选择商品规格</view>
             </view>
@@ -86,7 +86,6 @@ import { onLoad } from '@dcloudio/uni-app'
 import { commonNavigate } from '../../utils/CommonUtils'
 import { ItemDetailAPI } from './api'
 import { submitOrder } from '@/utils/CommonUtils'
-
 // Data
 const id = ref()
 const item = ref({})
@@ -104,140 +103,15 @@ const pickUpType = ref('')
 const orderType = ref('')
 // Computed
 const countPrice = computed(() => {
-  return item.value.price * count.value + selectedSkuOptions.value.reduce((acc, option) => acc + (option.addonalPrice || 0), 0)
+  return item.value.itemPrice * count.value + selectedSkuOptions.value.reduce((acc, option) => acc + (option.additionalPrice || 0), 0)
 })
 
 const canAddToCart = computed(() => {
   if (!item.value.skus || item.value.skus.length === 0) return true
-
   return item.value.skus.every(sku => {
     return selectedSkuOptions.value.some(option => option.parentId == sku.id)
   })
 })
-// fake data
-const fakeItem = {
-  id: 1,
-  name: 'Hutu Coffee',
-  description: '下沙须值课观然，在聚城脸够怕病轴最祖产杆浓可，活送顶场字几子。做再型扬是光兵色开帮云茶备。组若远氧呢绿径斯刚，北切余口气院语局国们青。品附矿板布游型害计信煤并语，期质发持概源袁过洋船对跳架。念整都毫助赵。罪而甲酸或破但雷式员打布温责。吧钱雨控士冲仍。师走是靠晚它伟训木油松剂块依。',
-  price: 10.00,
-  cover: '',
-  images: [
-    '/static/1905094318969053185.png',
-    '/static/1905094491690491906.png'
-  ],
-  skus: [{
-    "id": 1,
-    "label": '糖度',
-    "multi": false,
-    "options": [
-      {
-        "label": "正常糖",
-        "value": "1",
-        "parentId": "1"
-      },
-      {
-        "label": "少糖",
-        "value": "2",
-        "parentId": "1"
-      },
-      {
-        "label": "半糖",
-        "value": "3",
-        "parentId": "1"
-      },
-      {
-        "label": "微糖",
-        "value": "4",
-        "parentId": "1"
-      },
-    ]
-  },
-  {
-    "id": 2,
-    "label": '冰度',
-    "multi": false,
-    "options": [
-      {
-        "label": "正常冰",
-        "value": "1",
-        "parentId": "2"
-      },
-      {
-        "label": "少冰",
-        "value": "2",
-        "parentId": "2"
-      },
-      {
-        "label": "微冰",
-        "value": "3",
-        "parentId": "2"
-      },
-      {
-        "label": "去冰",
-        "parentId": "2"
-      }
-    ]
-  },
-  {
-    id: 3,
-    "label": '杯量',
-    "multi": false,
-    "options": [
-      {
-        "label": "正常杯",
-        "value": "1",
-        "parentId": "3"
-      },
-      {
-        "label": "大杯",
-        "value": "2",
-        "disabled": true,
-        "parentId": "3"
-      },
-      {
-        "label": "超大杯",
-        "value": "3",
-        "parentId": "3"
-      },
-      {
-        "label": "超大杯",
-        "value": "3",
-        "parentId": "3"
-      }
-    ]
-  },
-  {
-    id: 4,
-    "label": '小料',
-    "multi": true,
-    "options": [
-      {
-        "label": "浓缩",
-        "value": "1",
-        "parentId": "4"
-      },
-      {
-        "label": "一份奶泡",
-        "value": "2",
-        "parentId": "4",
-        "addonalPrice": 1.00,
-      },
-      {
-        "label": "一份糖浆",
-        "value": "3",
-        "parentId": "4",
-        "addonalPrice": 1.00,
-      },
-      {
-        "label": "一份咖啡",
-        "value": "4",
-        "parentId": "4",
-        "addonalPrice": 1.00,
-      }
-    ]
-  },
-  ],
-}
 
 // Emits
 const emit = defineEmits([
@@ -262,7 +136,9 @@ onLoad((opt) => {
 
 // Methods
 const getItem = () => {
-  item.value = fakeItem
+  ItemDetailAPI.details(id.value).then(res => {
+    item.value = res.data
+  })
 }
 
 const changeBanner = (e) => {
@@ -271,7 +147,6 @@ const changeBanner = (e) => {
 
 const selectSkuOption = (sku, option) => {
   if (option.disabled) return
-  console.log(sku, option);
   if (selectedSkuOptions.value.includes(option)) {
     selectedSkuOptions.value.splice(selectedSkuOptions.value.indexOf(option), 1)
     return
@@ -279,13 +154,13 @@ const selectSkuOption = (sku, option) => {
   if (sku.multi) {
     selectedSkuOptions.value.push(option)
   } else {
-    selectedSkuOptions.value = selectedSkuOptions.value.filter(item => item.parentId != sku.id)
+    selectedSkuOptions.value = selectedSkuOptions.value.filter(item => item.specId != sku.id)
     selectedSkuOptions.value.push(option)
   }
 }
 
 const isSkuOptionSelected = (sku, option) => {
-  const selectedOptions = selectedSkuOptions.value.filter(item => item.parentId == sku.id)
+  const selectedOptions = selectedSkuOptions.value.filter(item => item.specId == sku.id)
   return selectedOptions.includes(option)
 }
 
@@ -295,8 +170,8 @@ const handleAddToCart = () => {
   // 加入购物车逻辑
   const cartItem = {
     id: item.value.id,
-    name: item.value.name,
-    cover: item.value.cover,
+    name: item.value.itemName,
+    cover: item.value.coverUrl,
     price: countPrice.value,
     count: count.value,
     skus: selectedSkuOptions.value
@@ -312,11 +187,17 @@ const handleAddToCart = () => {
 }
 
 const handleBuyNow = () => {
-  if (!canAddToCart.value) return
+  if (selectedSkuOptions.value.length <= 0) {
+    uni.showToast({
+      title: '请选择商品规格',
+      icon: 'none'
+    })
+    return
+  }
   const cartItem = {
     id: item.value.id,
-    name: item.value.name,
-    cover: item.value.cover,
+    name: item.value.itemName,
+    cover: item.value.coverUrl,
     price: countPrice.value,
     count: count.value,
     skus: selectedSkuOptions.value
@@ -347,28 +228,6 @@ const handleBuyNow = () => {
     height: 100%;
     display: block;
   }
-
-// .header {
-//   width: 100%;
-//   height: 30vh;
-//   position: relative;
-//   z-index: 1;
-
-//   .swiper-box {
-//     height: 100%;
-//     width: 100%;
-//   }
-
-//   .banner-image {
-//     width: 100%;
-//     height: 100%;
-//     display: block;
-//   }
-
-//   :deep(.uni-swiper__dots-box) {
-//     bottom: 20rpx !important;
-//   }
-// }
 
 .content {
   width: 100%;

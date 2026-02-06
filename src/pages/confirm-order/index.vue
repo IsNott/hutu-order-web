@@ -4,10 +4,11 @@
     <view class="content box">
       <scroll-view class="scroll-content" scroll-y="true">
         <view class="cart-list">
-          <view :key="item.id" v-for="(item, index) in itemInfo" class="cart-detail-item">
+          <view :key="item.id" v-for="(item) in itemInfo" class="cart-detail-item">
             <view class="cart-detail-item-content">
               <view class="cart-detail-item-content-left">
-                <image :src="item.cover || '/static/image/default-coffee.png'" mode="aspectFill" class="item-image" />
+                <image :src="config.baseUrl + item.cover || '/static/image/default-coffee.png'" mode="aspectFill"
+                  class="item-image" />
               </view>
               <view class="cart-detail-item-content-right">
                 <view class="cart-detail-item-content-right-header">
@@ -18,12 +19,6 @@
                   <view class="sku">
                     {{ getSkuStr(item) }}
                   </view>
-                  <!-- <view class="sku-tags">
-                    <view class="sku-tag" v-for="(sku, index) in item.skus" :key="index">
-                      {{ sku.label }}
-                      <text v-if="sku.addonalPrice">(加¥{{ sku.addonalPrice }})</text>
-                    </view>
-                  </view> -->
                 </view>
                 <view class="cart-detail-item-content-right-footer">
                   <view class="count">×{{ item.count }}</view>
@@ -34,37 +29,9 @@
         </view>
 
         <view class="feature-section">
-          <view class="feature-item" @click="toggleCoupon">
-            <view class="feature-left">
-              <uni-icons type="vip-filled" color="#8B7355" size="20" />
-              <text class="feature-title">优惠券</text>
-            </view>
-            <view class="feature-right">
-              <text class="feature-value" :class="{ 'placeholder': !selectedCopuon }">
-                {{ selectedCopuon ? selectedCopuon.name : '选择优惠券' }}
-              </text>
-              <uni-icons type="right" color="#999" size="18" />
-            </view>
-          </view>
-          <feature-item 
-          title="优惠券" 
-          leftIcon="vip-filled"
-          :active="!selectedCopuon"
-          :activePlaceholder="selectedCopuon ? '' : '选择优惠券'"
-          @toggle="toggleCoupon" />
-
-          <view class="feature-item" @click="toggleRemark">
-            <view class="feature-left">
-              <uni-icons type="chat" color="#8B7355" size="20" />
-              <text class="feature-title">备注</text>
-            </view>
-            <view class="feature-right">
-              <text class="feature-value" :class="{ 'placeholder': !remark }">
-                {{ remark || '填写备注' }}
-              </text>
-              <uni-icons type="right" color="#999" size="18" />
-            </view>
-          </view>
+          <feature-item title="优惠券" leftIcon="vip-filled" :active="!selectedCopuon"
+            :activePlaceholder="selectedCopuon ? '' : '选择优惠券'" @toggle="toggleCoupon" />
+          <feature-item title="备注" leftIcon="chat" :activePlaceholder="remark ? '' : '填写备注'" @toggle="toggleRemark" />
           <view v-if="orderType === OrderType.SCHEDULE" class="feature-item" @click="toggleExpectArrivalTime">
             <view class="feature-left">
               <uni-icons type="chat" color="#8B7355" size="20" />
@@ -101,6 +68,8 @@ import { OrderType, OrderStatus } from '@/enums/HutuEnums'
 import { commonNavigate } from '@/utils/CommonUtils'
 import { confirmOrderAPI } from '@/pages/confirm-order/api/index'
 import FeatureItem from '@/component/FeatureItem.vue'
+import { config } from '@/config/index'
+
 // Data
 const itemInfo = ref([])
 const pickUpType = ref('')
@@ -113,7 +82,6 @@ let payTimeer = null
 // Computed
 const totalPrice = computed(() => {
   let total = 0
-  console.log(itemInfo.value);
   if (itemInfo.value) {
     itemInfo.value.forEach(item => {
       total += item.price * item.count
@@ -121,96 +89,6 @@ const totalPrice = computed(() => {
   }
   return total
 })
-// Fake data
-const items = [
-  {
-    id: 1,
-    name: 'Hutu Coffee',
-    cover: '',
-    price: 11,
-    count: 1,
-    skus: [
-      {
-        label: '微糖',
-        value: '4',
-        parentId: '1'
-      },
-      {
-        label: '去冰',
-        parentId: '2'
-      },
-      {
-        label: '超大杯',
-        value: '3',
-        parentId: '3'
-      },
-      {
-        label: '一份糖浆',
-        value: '3',
-        parentId: '4',
-        addonalPrice: 1
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Hutu Coffee',
-    cover: '',
-    price: 11,
-    count: 1,
-    skus: [
-      {
-        label: '微糖',
-        value: '4',
-        parentId: '1'
-      },
-      {
-        label: '去冰',
-        parentId: '2'
-      },
-      {
-        label: '超大杯',
-        value: '3',
-        parentId: '3'
-      },
-      {
-        label: '一份糖浆',
-        value: '3',
-        parentId: '4',
-        addonalPrice: 1
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Hutu Coffee',
-    cover: '',
-    price: 11,
-    count: 1,
-    skus: [
-      {
-        label: '微糖',
-        value: '4',
-        parentId: '1'
-      },
-      {
-        label: '去冰',
-        parentId: '2'
-      },
-      {
-        label: '超大杯',
-        value: '3',
-        parentId: '3'
-      },
-      {
-        label: '一份糖浆',
-        value: '3',
-        parentId: '4',
-        addonalPrice: 1
-      }
-    ]
-  }
-]
 // Emits
 const emit = defineEmits([
 
@@ -243,6 +121,8 @@ const getCurrentShop = () => {
 
 const getItems = () => {
   itemInfo.value = uni.getStorageSync('CART-SUBMIT')
+  console.log('itemInfo', itemInfo.value);
+
 }
 
 const changePickUpType = (type) => {
@@ -306,7 +186,7 @@ const handlePay = async () => {
 
 const getSkuStr = (item) => {
   return item.skus.map(sku => {
-    return `${sku.label}`
+    return `${sku.optionLabel}`
   }).join('/')
 }
 </script>

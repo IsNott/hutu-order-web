@@ -236,7 +236,9 @@ const handleTouchMove = (e) => {
 
 const goToOrder = (shop) => {
   uni.setStorageSync('CURRENT_SHOP', shop)
-  commonNavigate('/pages/order/index')
+  uni.reLaunch({
+    url: '/pages/order/index'
+  })
 }
 // Watchers
 
